@@ -16,7 +16,7 @@ TARGETS=$(NAME)_linux.umi
 
 .PHONY: all build run docs clean distclean
 
-all: build
+all: build docs
 
 %_linux.umi: %.c Makefile
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) $< -o $@
@@ -30,10 +30,8 @@ mmdoc:
 	git clone https://git.sr.ht/~mrms/mmdoc
 
 docs: mmdoc
-	$(UMKA) mmdoc/mmdoc.um \
-		-l umka \
-		# -u "../$(NAME).um#L%d" \
-		$(NAME).um > doc/$(NAME).md
+	# -u "../$(NAME).um#L%d"
+	$(UMKA) mmdoc/mmdoc.um -l umka $(NAME).um > doc/$(NAME).md
 
 clean:
 	rm $(TARGETS) mmdoc -rf

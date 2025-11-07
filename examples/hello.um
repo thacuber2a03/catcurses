@@ -1,5 +1,5 @@
 import (
-	cc = "catcurses.um"
+	cc = "../catcurses.um"
 )
 
 x, y := 0, 0
