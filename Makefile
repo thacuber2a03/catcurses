@@ -26,8 +26,11 @@ build: $(TARGETS)
 run: build
 	$(UMKA) main.um
 
-docs: mmdoc
+mmdoc:
+	git clone https://git.sr.ht/~mrms/mmdoc
 
+docs: mmdoc
+	$(UMKA) mmdoc/mmdoc.um -l umka -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
 
 clean:
-	rm $(TARGETS) -rf
+	rm $(TARGETS) mmdoc -rf
