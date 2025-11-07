@@ -14,7 +14,7 @@ LDFLAGS := -lncurses
 
 TARGETS=$(NAME)_linux.umi
 
-.PHONY: all build docs clean run
+.PHONY: all build run docs clean distclean
 
 all: build
 
@@ -24,13 +24,19 @@ all: build
 build: $(TARGETS)
 
 run: build
-	$(UMKA) main.um
+	$(UMKA) examples/hello.um
 
 mmdoc:
 	git clone https://git.sr.ht/~mrms/mmdoc
 
 docs: mmdoc
-	$(UMKA) mmdoc/mmdoc.um -l umka -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
+	$(UMKA) mmdoc/mmdoc.um \
+		-l umka \
+		# -u "../$(NAME).um#L%d" \
+		$(NAME).um > doc/$(NAME).md
 
 clean:
 	rm $(TARGETS) mmdoc -rf
+
+distclean: clean
+	rm doc/ -rf
