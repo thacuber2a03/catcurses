@@ -1,0 +1,24 @@
+{
+    "name": "catcurses",
+    "version": "v0.1.0",
+    "author": "thacuber2a03",
+    "license": "BSD 3-Clause",
+    "description": "Umka bindings for ncurses",
+    "readme": "README.md",
+    "dependencies": [
+        "umka",
+        "fmt"
+    ],
+    "include": [
+        "LICENSE",
+        "README.md",
+        "catcurses.um",
+        "catcurses_linux.so"
+    ],
+    "pre_build": {
+        "posix": "make"
+    },
+    "run": {
+        "posix": "make run"
+    }
+}

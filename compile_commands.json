@@ -1,0 +1,21 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/cc",
+      "-c",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-std=c11",
+      "-Iumbox/umka",
+      "-fPIC",
+      "-g",
+      "-o",
+      "catcurses_linux.umi",
+      "catcurses.c"
+    ],
+    "directory": "/home/x4n3ku/Documents/code/umka/catcurses",
+    "file": "/home/x4n3ku/Documents/code/umka/catcurses/catcurses.c",
+    "output": "/home/x4n3ku/Documents/code/umka/catcurses/catcurses_linux.umi"
+  }
+]

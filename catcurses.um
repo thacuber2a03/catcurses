@@ -1,0 +1,334 @@
+import (
+	"std.um"
+
+	"umbox/fmt/fmt.um"
+)
+
+type (
+	RawWindow = ^void
+	RawTerminal = ^void
+)
+
+type (
+	Window* = struct { _: RawWindow }
+	Terminal* = struct { _: RawTerminal; window: Window }
+)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+fn umc__set_term(term: RawTerminal): RawTerminal
+
+var curTerm, stdTerm: ^Terminal
+
+//~~fn (^Terminal) makeCurrent
+// Makes `t` the "current" terminal; that is, the terminal whose associated window is shown on-screen.
+// Reports whether `t` was successfully set as the current terminal.
+fn (t: ^Terminal) makeCurrent*(): bool
+//~~
+
+fn makeCurrent(t: ^Terminal): bool {
+	curTerm = t
+	return umc__set_term(t._) != null
+}
+
+//~~fn curTerminal
+// Returns the current terminal.
+// See `fn (^Terminal) makeCurrent`.
+fn curTerminal*(): ^Terminal
+//~~
+
+fn curTerminal*(): ^Terminal { return curTerm }
+
+//~~fn sessionExists
+// Reports whether a terminal is set.
+// (In most cases, this serves to check whether ncurses is initialized.)
+fn sessionExists*(): bool
+//~~
+
+// this function is funny
+fn sessionExists*(): bool { return curTerm != null }
+
+//~~fn stdTerminal
+// Returns the standard terminal.
+// If ncurses hasn't been initialized yet, this function will initialize it.
+fn stdTerminal*(): ^Terminal
+//~~
+
+fn stdTerminal*(): ^Terminal {
+	if stdTerm == null {
+		w := umc__initscr()
+		std::assert(w != null, "couldn't initialize ncurses")
+		// this is ugly, but, eh
+		s := umc__set_term(null)
+		umc__set_term(s)
+		stdTerm = &Terminal{ _: s, window: {w} }
+
+		// this shouldn't be an issue, cause mkTerminal calls this function
+		// and the only access to the stdTerm the user has is either that function or this one
+		//
+		// though, it's still rather iffy to see this random assignment here
+		curTerm = stdTerm
+	}
+	return stdTerm
+}
+
+//~~fn mkTerminal
+// Creates a new terminal.
+// If `termType` isn't empty, the created terminal is created with said type.
+// If `outf` and `inf` are null, they default to `std::stdout()` and `std::stdin()`, respectively.
+//
+// If no terminal existed previously, initializes ncurses and returns a stub representing the standard terminal.
+// `termType`, `outf` and `inf` are ignored in this case.
+fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool)
+//~~
+
+fn umc__initscr(): RawWindow
+fn umc__curscr(): RawWindow
+fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
+
+fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool) {
+	if stdTerm == null { return stdTerminal(), true }
+
+	if termType == "" { termType = std::getenv("TERM") }
+	if outf == null   { outf     = std::stdout()       }
+	if inf == null    { inf      = std::stdin()        }
+
+	t := umc__newterm(termType, std::stdout(), std::stdin())
+	if t == null { return null, false }
+
+	old := umc__set_term(t)
+	w := umc__curscr()
+	umc__set_term(old)
+	return &Terminal{ _: t, window: {w} }, true
+}
+
+fn (t: ^Terminal) makeCurrent*(): bool { return makeCurrent(t) }
+
+//~~fn (^Terminal) destroy
+// Destroys the underlying terminal. `t` is no longer valid for use after calling this method.
+// If `t` is the standard terminal, this method will finalize ncurses.
+fn (t: ^Terminal) destroy*()
+//~~
+
+fn umc__endwin(): bool
+fn umc__delscreen(term: RawTerminal)
+
+fn (t: ^Terminal) destroy*() {
+	if t == stdTerm {
+		umc__endwin()
+		return
+	}
+
+	if curTerm == t { makeCurrent(stdTerminal()) }
+	umc__delscreen(t._)
+}
+
+//~~fn (^Terminal) raw
+// Sets the terminal to raw mode.
+// Must only be called on the standard terminal (see `fn stdTerminal`).
+// Reports whether the terminal was set/unset to raw mode.
+fn (t: ^Terminal) raw*(b: bool)
+//~~
+
+fn umc__raw(): bool
+fn umc__noraw(): bool
+
+fn (t: ^Terminal) raw*(b: bool) {
+	std::assert(t == stdTerm, "can't call 'raw' on anything other than the standard terminal")
+	if b { return umc__raw() } else { return umc__noraw() }
+}
+
+//~~fn (^Terminal) cbreak
+// Sets the terminal to cbreak mode (disables line buffering but still interprets signals).
+// Must only be called on the standard terminal (see `fn stdTerminal`).
+// Reports whether the terminal was set/unset to cbreak mode.
+fn (t: ^Terminal) cbreak*(b: bool)
+//~~
+
+fn umc__cbreak(): bool
+fn umc__nocbreak(): bool
+
+fn (t: ^Terminal) cbreak*(b: bool) {
+	std::assert(t == stdTerm, "can't call 'cbreak' on anything other than the standard terminal")
+	if b { return umc__cbreak() } else { return umc__nocbreak() }
+}
+
+//~~fn (^Terminal) echo
+// Enables/disables character echoing after each keypress.
+// Must only be called on the standard terminal (see `fn stdTerminal`).
+// Reports whether the echo was able to be set/unset.
+fn (t: ^Terminal) echo*(b: bool)
+//~~
+
+fn umc__echo(): bool
+fn umc__noecho(): bool
+
+fn (t: ^Terminal) echo*(b: bool): bool {
+	std::assert(t == stdTerm, "can't call 'echo' on anything other than the standard terminal")
+	if b { return umc__echo() } else { return umc__noecho() }
+}
+
+//~~fn (^Terminal) setHalfDelay
+// Sets the terminal's half delay, in tenths of a second.
+// Must only be called on the standard terminal (see `fn stdTerminal`).
+// Reports whether the half delay was able to be changed.
+fn (t: ^Terminal) setHalfDelay*(n: int)
+//~~
+
+fn umc__halfdelay(tenths: int): bool
+
+fn (t: ^Terminal) setHalfDelay*(n: int): bool {
+	std::assert(t == stdTerm, "can't call 'setHalfDelay' on anything other than the standard terminal")
+	return umc__halfdelay(n)
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+fn umc__wprintw(win: RawWindow, s: str): int
+fn umc__mvwprintw(win: RawWindow, x, y: int, s: str): int
+fn umc__wrefresh(win: RawWindow): bool
+
+//~~type Key
+// The enum wrapping the value returned by getChar.
+// If getChar returns an ASCII keypress, the value wrapped under this enum will be that key.
+//
+// > [!WARNING]
+// > The function keys (F0..F64 and arrow keys, amongst others)
+// > *do not match* the values used by ncurses, and don't currently intend to do so.
+type Key* = enum {
+	escape = 0x1b
+
+	// Function keys (every single one is supported for completion)
+	f0 = 1000;
+	f1;  f2;  f3;  f4;  f5;  f6;  f7;  f8
+	f9 ; f10; f11; f12; f13; f14; f15; f16
+	f17; f18; f19; f20; f21; f22; f23; f24
+	f25; f26; f27; f28; f29; f30; f31; f32
+	f33; f34; f35; f36; f37; f38; f39; f40
+	f41; f42; f43; f44; f45; f46; f47; f48
+	f49; f50; f51; f52; f53; f54; f55; f56
+	f57; f58; f59; f60; f61; f62; f63; f64
+
+	// Arrow keys
+	down; up; left; right
+}
+//~~
+
+//~~fn keyF
+// Similar to ncurses' `KEY_F(n)` macro.
+fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
+//~~
+
+//~~fn (^Window) keypad
+// Attempts to enable/disable function key detection in `w`.
+// Reports whether it was able to do so.
+fn (w: ^Window) keypad*(enable: bool): bool
+//~~
+
+fn umc__keypad(win: RawWindow, enable: bool): bool
+fn (w: ^Window) keypad*(enable: bool): bool { return umc__keypad(w._, enable) }
+
+//~~fn (^Window) print
+// Prints a formatted string on the current location of the cursor.
+// Returns how many characters were written.
+// The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
+fn (w: ^Window) print*(fmt: str, a: ..any): int
+//~~
+
+fn (w: ^Window) print*(fmt: str, a: ..any): int { return umc__wprintw(w._, fmt::vsfmt(fmt,  a)) }
+
+//~~fn (^Window) printAt
+// Moves the cursor to (`x`,`y`) and prints a formatted string there.
+// Returns how many characters were written.
+// The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
+fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
+//~~
+
+fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int { return umc__mvwprintw(w._, x, y, fmt::vsfmt(fmt,  a)) }
+
+//~~fn (^Window) getKey
+// Returns the current keystroke, if any.
+// Return values depend on the standard terminal's settings; check `man 3x getch` for information.
+fn (w: ^Window) getKey*(): (Key, bool)
+//~~
+
+fn umc__wgetch(win: RawWindow): (int, bool)
+fn umc__fnkeyoffset(key: int): int
+fn umc__otherkeyoffset(key: int): int
+
+fn (w: ^Window) getKey*(): (Key, bool) {
+	c, ok := umc__wgetch(w._)
+	if !ok { return Key(0), false }
+
+	if c >= 256 {
+		if offset := umc__fnkeyoffset(c); offset >= 0 && offset <= 64 {
+			return keyF(offset), true
+		} else if offset := umc__otherkeyoffset(c); offset != -1 {
+			return Key(int(Key.down)+offset), true
+		}
+	}
+
+	return Key(c), true
+}
+
+//~~fn (^Window) refresh
+// Redraws this window, if applicable.
+fn (w: ^Window) refresh*(): bool { return umc__wrefresh(w._) }
+//~~
+
+//~~type Attribute
+// All character attributes that can be toggled with `fn (^Window) attrOn`/`attrOff`.
+type Attribute = enum {
+	normal     // Normal display (no highlight)
+	standout   // Best highlighting mode of the terminal
+	underline  // Underlining
+	reverse    // Reverse video
+	blink      // Blinking
+	dim        // Half bright
+	bold       // Extra bright or bold
+	protect    // Protected mode
+	invis      // Invisible or blank mode
+	altcharset // Alternate character set
+	italic     // Italics (non-X/Open extension)
+}
+//~~
+
+//~~fn (^Window) attrOn
+// Enables all the attributes listed in `attrs` (see `type Attribute`).
+fn (w: ^Window) attrOn*(attrs: ..Attribute)
+//~~
+
+fn umc__wattron(win: RawWindow, a: int): int
+
+fn (w: ^Window) attrOn*(attrs: ..Attribute) {
+	for _,a in attrs { umc__wattron(w._, int(a)) }
+}
+
+//~~fn (^Window) attrOff
+// Disables all the attributes listed in `attrs` (see `type Attribute`).
+fn (w: ^Window) attrOff*(attrs: ..Attribute)
+//~~
+
+fn umc__wattroff(win: RawWindow, a: int): int
+
+fn (w: ^Window) attrOff*(attrs: ..Attribute) {
+	for _,a in attrs { umc__wattroff(w._, int(a)) }
+}
+
+//~~fn (^Window) clear
+// Clears this window.
+fn (w: ^Window) clear*(): bool
+//~~
+
+fn umc__clear(win: RawWindow): bool
+
+fn (w: ^Window) clear*(): bool { return umc__clear(w._) }
+
+//~~fn (^Window) erase
+// Fills this window with blank characters.
+fn (w: ^Window) erase*(): bool
+//~~
+
+fn umc__erase(win: RawWindow): bool
+
+fn (w: ^Window) erase*(): bool { return umc__erase(w._) }

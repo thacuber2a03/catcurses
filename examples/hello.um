@@ -1,0 +1,34 @@
+import (
+	cc = "catcurses.um"
+)
+
+x, y := 0, 0
+
+fn main() {
+	t := cc::stdTerminal()
+	t.setRaw(true)
+	t.setEcho(false)
+	t.setHalfDelay(1)
+
+	w := t.window
+	w.keypad(true)
+
+	for true {
+		c, ok := w.getKey()
+		if c == cc::Key('q') { break }
+
+		switch c {
+		case .left: x--
+		case .right: x++
+		case .up: y--
+		case .down: y++
+		}
+
+		w.clear()
+		w.printAt(x, y, "Test")
+		w.refresh()
+	}
+
+	t.destroy()
+}
+
