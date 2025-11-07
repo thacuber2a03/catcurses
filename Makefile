@@ -26,15 +26,14 @@ build: $(TARGETS)
 run: build
 	$(UMKA) examples/hello.um
 
-mmdoc:
-	git clone https://git.sr.ht/~mrms/mmdoc
+doc:
+	mkdir -p doc
 
-docs: mmdoc
-	# -u "../$(NAME).um#L%d"
-	$(UMKA) mmdoc/mmdoc.um -l umka $(NAME).um > doc/$(NAME).md
+docs: doc
+	$(UMKA) mmdoc/mmdoc.um -l umka -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
 
 clean:
-	rm $(TARGETS) mmdoc -rf
+	rm $(TARGETS) -rf
 
 distclean: clean
 	rm doc/ -rf
