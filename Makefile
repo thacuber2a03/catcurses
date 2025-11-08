@@ -15,7 +15,7 @@ LDFLAGS := -lncurses
 
 TARGETS=$(NAME)_linux.umi
 
-.PHONY: all build run clean distclean
+.PHONY: all build run docs clean distclean
 
 all: build doc/$(NAME).md
 
@@ -30,7 +30,9 @@ run: build doc/$(NAME).md
 doc:
 	mkdir -p doc
 doc/$(NAME).md: doc $(NAME).um
-	$(UMKA) mmdoc/mmdoc.um -l umka -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
+	$(UMKA) mmdoc/mmdoc.um -l go -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
+
+docs: doc/$(NAME).md
 
 clean:
 	rm $(TARGETS) -rf

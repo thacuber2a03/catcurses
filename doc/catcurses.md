@@ -1,6 +1,6 @@
 ## [fn (^Terminal) makeCurrent](../catcurses.um#L31)
 
-```umka
+```go
 fn (t: ^Terminal) makeCurrent*(): bool
 ```
 
@@ -10,7 +10,7 @@ Reports whether `t` was successfully set as the current terminal.
 
 ## [fn curTerminal](../catcurses.um#L42)
 
-```umka
+```go
 fn curTerminal*(): ^Terminal
 ```
 
@@ -20,7 +20,7 @@ See `fn (^Terminal) makeCurrent`.
 
 ## [fn sessionExists](../catcurses.um#L50)
 
-```umka
+```go
 fn sessionExists*(): bool
 ```
 
@@ -30,7 +30,7 @@ Reports whether a terminal is set.
 
 ## [fn stdTerminal](../catcurses.um#L59)
 
-```umka
+```go
 fn stdTerminal*(): ^Terminal
 ```
 
@@ -40,7 +40,7 @@ If ncurses hasn't been initialized yet, this function will initialize it.
 
 ## [fn mkTerminal](../catcurses.um#L87)
 
-```umka
+```go
 fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool)
 ```
 
@@ -54,7 +54,7 @@ If no terminal existed previously, initializes ncurses and returns a stub repres
 
 ## [fn (^Terminal) destroy](../catcurses.um#L111)
 
-```umka
+```go
 fn (t: ^Terminal) destroy*()
 ```
 
@@ -64,7 +64,7 @@ If `t` is the standard terminal, this method will finalize ncurses.
 
 ## [fn (^Terminal) raw](../catcurses.um#L135)
 
-```umka
+```go
 fn (t: ^Terminal) raw*(b: bool): bool
 ```
 
@@ -75,7 +75,7 @@ Reports whether the terminal was set/unset to raw mode.
 
 ## [fn (^Terminal) cbreak](../catcurses.um#L151)
 
-```umka
+```go
 fn (t: ^Terminal) cbreak*(b: bool): bool
 ```
 
@@ -86,7 +86,7 @@ Reports whether the terminal was set/unset to cbreak mode.
 
 ## [fn (^Terminal) echo](../catcurses.um#L167)
 
-```umka
+```go
 fn (t: ^Terminal) echo*(b: bool): bool
 ```
 
@@ -97,7 +97,7 @@ Reports whether the echo was able to be set/unset.
 
 ## [fn (^Terminal) halfDelay](../catcurses.um#L183)
 
-```umka
+```go
 fn (t: ^Terminal) halfDelay*(n: int): bool
 ```
 
@@ -108,7 +108,7 @@ Reports whether the half delay was able to be changed.
 
 ## [type Visibility](../catcurses.um#L195)
 
-```umka
+```go
 type Visibility* = enum { hidden; visible; veryVisible }
 ```
 
@@ -117,7 +117,7 @@ Cursor visibility specifiers. See `fn (^Terminal) cursorVisibility`.
 
 ## [fn (^Visibility) string](../catcurses.um#L201)
 
-```umka
+```go
 fn (v: ^Visibility) string*(): str
 ```
 
@@ -127,7 +127,7 @@ For debugging purposes.
 
 ## [fn (^Terminal) cursorVisibility](../catcurses.um#L218)
 
-```umka
+```go
 fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool)
 ```
 
@@ -138,7 +138,7 @@ Returns the previous visibility and whether it was able to change it at all.
 
 ## [type Key](../catcurses.um#L239)
 
-```umka
+```go
 type Key* = enum {
 	escape = 0x1b
 
@@ -168,7 +168,7 @@ If getChar returns an ASCII keypress, the value wrapped under this enum will be 
 
 ## [fn (^Key) string](../catcurses.um#L261)
 
-```umka
+```go
 fn (k: ^Key) string*(): str
 ```
 
@@ -178,7 +178,7 @@ For debugging purposes.
 
 ## [fn keyF](../catcurses.um#L294)
 
-```umka
+```go
 fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
 ```
 
@@ -187,7 +187,7 @@ Similar to ncurses' `KEY_F(n)` macro.
 
 ## [fn (^Window) keypad](../catcurses.um#L300)
 
-```umka
+```go
 fn (w: ^Window) keypad*(enable: bool): bool
 ```
 
@@ -197,7 +197,7 @@ Reports whether it was able to do so.
 
 ## [fn (^Window) print](../catcurses.um#L311)
 
-```umka
+```go
 fn (w: ^Window) print*(fmt: str, a: ..any): int
 ```
 
@@ -209,7 +209,7 @@ The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse
 
 ## [fn (^Window) printAt](../catcurses.um#L322)
 
-```umka
+```go
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
 ```
 
@@ -221,7 +221,7 @@ The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse
 
 ## [fn (^Window) getKey](../catcurses.um#L331)
 
-```umka
+```go
 fn (w: ^Window) getKey*(): (Key, bool)
 ```
 
@@ -231,7 +231,7 @@ Return values depend on the standard terminal's settings; check `man 3x getch` f
 
 ## [fn (^Window) refresh](../catcurses.um#L355)
 
-```umka
+```go
 fn (w: ^Window) refresh*(): bool
 ```
 
@@ -240,7 +240,7 @@ Redraws this window, if applicable.
 
 ## [type Attribute](../catcurses.um#L363)
 
-```umka
+```go
 type Attribute = enum {
 	normal     // Normal display (no highlight)
 	standOut   // Best highlighting mode of the terminal
@@ -261,7 +261,7 @@ All character attributes that can be toggled with the window attribute functions
 
 ## [fn (^Attribute) string](../catcurses.um#L383)
 
-```umka
+```go
 fn (a: ^Attribute) string*(): str
 ```
 
@@ -271,7 +271,7 @@ For debugging purposes.
 
 ## [fn (^Window) attrOn](../catcurses.um#L414)
 
-```umka
+```go
 fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute)
 ```
 
@@ -281,7 +281,7 @@ Reports whether any of the attributes could not be enabled, and which one.
 
 ## [fn (^Window) attrOff](../catcurses.um#L420)
 
-```umka
+```go
 fn (w: ^Window) attrOff*(attrs: ..Attribute): (bool, Attribute)
 ```
 
@@ -291,7 +291,7 @@ Reports whether any of the attributes could not be disabled, and which one.
 
 ## [fn (^Window) attrListOn](../catcurses.um#L425)
 
-```umka
+```go
 fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
 ```
 
@@ -300,7 +300,7 @@ Alternate version of `fn (^Window) attrOn` that explicitly takes a list.
 
 ## [fn (^Window) attrListOff](../catcurses.um#L430)
 
-```umka
+```go
 fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
 ```
 
@@ -309,7 +309,7 @@ Alternate version of `fn (^Window) attrOff` that explicitly takes a list.
 
 ## [fn (^Window) withAttrs](../catcurses.um#L435)
 
-```umka
+```go
 fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(w: ^Window))
 ```
 
@@ -318,7 +318,7 @@ Runs `f` with all attributes in `attrs` enabled, and disables them when the func
 
 ## [fn (^Window) getAttributes](../catcurses.um#L460)
 
-```umka
+```go
 fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, RawColorPair)
 ```
 
@@ -334,7 +334,7 @@ Returns `null` for the attributes map on error.
 
 ## [fn (^Window) setAttributes](../catcurses.um#L468)
 
-```umka
+```go
 fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: RawColorPair): bool
 ```
 
@@ -346,7 +346,7 @@ Overwrites the set attributes and color pair currently set for this window.
 
 ## [fn (^Window) clear](../catcurses.um#L502)
 
-```umka
+```go
 fn (w: ^Window) clear*(): bool
 ```
 
@@ -355,7 +355,7 @@ Clears this window.
 
 ## [fn (^Window) erase](../catcurses.um#L510)
 
-```umka
+```go
 fn (w: ^Window) erase*(): bool
 ```
 
@@ -364,7 +364,7 @@ Fills this window with blank characters.
 
 ## [fn (^Window) getSize](../catcurses.um#L518)
 
-```umka
+```go
 fn (w: ^Window) getSize*(): (int, int)
 ```
 
