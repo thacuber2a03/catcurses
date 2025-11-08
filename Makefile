@@ -27,9 +27,11 @@ build: $(TARGETS)
 run: build doc/$(NAME).md
 	$(UMKA) examples/hello.um
 
-doc:
+mmdoc:
 	mkdir -p doc
-doc/$(NAME).md: doc $(NAME).um
+	git clone https://github.com/marekmaskarinec/mmdoc
+
+doc/$(NAME).md: mmdoc $(NAME).um
 	$(UMKA) mmdoc/mmdoc.um -l go -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
 
 docs: doc/$(NAME).md
@@ -38,4 +40,4 @@ clean:
 	rm $(TARGETS) -rf
 
 distclean: clean
-	rm doc/ -rf
+	rm doc mmdoc -rf
