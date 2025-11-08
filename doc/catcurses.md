@@ -195,7 +195,7 @@ Attempts to enable/disable function key detection in `w`.
 Reports whether it was able to do so.
 
 
-## [fn (^Window) print](../catcurses.um#L310)
+## [fn (^Window) print](../catcurses.um#L311)
 
 ```umka
 fn (w: ^Window) print*(fmt: str, a: ..any): int
@@ -203,10 +203,11 @@ fn (w: ^Window) print*(fmt: str, a: ..any): int
 
 Prints a formatted string on the current location of the cursor.
 Returns how many characters were written.
+
 The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 
 
-## [fn (^Window) printAt](../catcurses.um#L320)
+## [fn (^Window) printAt](../catcurses.um#L322)
 
 ```umka
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
@@ -214,10 +215,11 @@ fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
 
 Moves the cursor to (`x`,`y`) and prints a formatted string there.
 Returns how many characters were written.
+
 The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 
 
-## [fn (^Window) getKey](../catcurses.um#L329)
+## [fn (^Window) getKey](../catcurses.um#L331)
 
 ```umka
 fn (w: ^Window) getKey*(): (Key, bool)
@@ -227,7 +229,7 @@ Returns the current keystroke, if any.
 Return values depend on the standard terminal's settings; check `man 3x getch` for information.
 
 
-## [fn (^Window) refresh](../catcurses.um#L353)
+## [fn (^Window) refresh](../catcurses.um#L355)
 
 ```umka
 fn (w: ^Window) refresh*(): bool
@@ -236,7 +238,7 @@ fn (w: ^Window) refresh*(): bool
 Redraws this window, if applicable.
 
 
-## [type Attribute](../catcurses.um#L361)
+## [type Attribute](../catcurses.um#L363)
 
 ```umka
 type Attribute = enum {
@@ -257,7 +259,7 @@ type Attribute = enum {
 All character attributes that can be toggled with the window attribute functions.
 
 
-## [fn (^Attribute) string](../catcurses.um#L381)
+## [fn (^Attribute) string](../catcurses.um#L383)
 
 ```umka
 fn (a: ^Attribute) string*(): str
@@ -267,7 +269,7 @@ Returns the string representation of this attribute.
 For debugging purposes.
 
 
-## [fn (^Window) attrOn](../catcurses.um#L412)
+## [fn (^Window) attrOn](../catcurses.um#L414)
 
 ```umka
 fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute)
@@ -277,7 +279,7 @@ Enables all the attributes listed in `attrs` (see `type Attribute`).
 Reports whether any of the attributes could not be enabled, and which one.
 
 
-## [fn (^Window) attrOff](../catcurses.um#L418)
+## [fn (^Window) attrOff](../catcurses.um#L420)
 
 ```umka
 fn (w: ^Window) attrOff*(attrs: ..Attribute): (bool, Attribute)
@@ -287,7 +289,7 @@ Disables all the attributes listed in `attrs` (see `type Attribute`).
 Reports whether any of the attributes could not be disabled, and which one.
 
 
-## [fn (^Window) attrListOn](../catcurses.um#L423)
+## [fn (^Window) attrListOn](../catcurses.um#L425)
 
 ```umka
 fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
@@ -296,7 +298,7 @@ fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
 Alternate version of `fn (^Window) attrOn` that explicitly takes a list.
 
 
-## [fn (^Window) attrListOff](../catcurses.um#L428)
+## [fn (^Window) attrListOff](../catcurses.um#L430)
 
 ```umka
 fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
@@ -305,7 +307,7 @@ fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
 Alternate version of `fn (^Window) attrOff` that explicitly takes a list.
 
 
-## [fn (^Window) withAttrs](../catcurses.um#L433)
+## [fn (^Window) withAttrs](../catcurses.um#L435)
 
 ```umka
 fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(w: ^Window))
@@ -314,7 +316,7 @@ fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(w: ^Window))
 Runs `f` with all attributes in `attrs` enabled, and disables them when the function ends.
 
 
-## [fn (^Window) getAttributes](../catcurses.um#L458)
+## [fn (^Window) getAttributes](../catcurses.um#L460)
 
 ```umka
 fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, RawColorPair)
@@ -330,7 +332,7 @@ Returns `null` for the attributes map on error.
 > You can ignore it for now, or pass it straight to `fn (^Window) setAttributes`.
 
 
-## [fn (^Window) setAttributes](../catcurses.um#L466)
+## [fn (^Window) setAttributes](../catcurses.um#L468)
 
 ```umka
 fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: RawColorPair): bool
@@ -342,7 +344,7 @@ Overwrites the set attributes and color pair currently set for this window.
 > See `fn (^Window) getAttributes`.
 
 
-## [fn (^Window) clear](../catcurses.um#L500)
+## [fn (^Window) clear](../catcurses.um#L502)
 
 ```umka
 fn (w: ^Window) clear*(): bool
@@ -351,7 +353,7 @@ fn (w: ^Window) clear*(): bool
 Clears this window.
 
 
-## [fn (^Window) erase](../catcurses.um#L508)
+## [fn (^Window) erase](../catcurses.um#L510)
 
 ```umka
 fn (w: ^Window) erase*(): bool
@@ -360,7 +362,7 @@ fn (w: ^Window) erase*(): bool
 Fills this window with blank characters.
 
 
-## [fn (^Window) getSize](../catcurses.um#L516)
+## [fn (^Window) getSize](../catcurses.um#L518)
 
 ```umka
 fn (w: ^Window) getSize*(): (int, int)

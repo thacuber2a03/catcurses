@@ -306,6 +306,7 @@ fn (w: ^Window) keypad*(enable: bool): bool { return umc__keypad(w._, enable) }
 //~~fn (^Window) print
 // Prints a formatted string on the current location of the cursor.
 // Returns how many characters were written.
+// 
 // The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 fn (w: ^Window) print*(fmt: str, a: ..any): int
 //~~
@@ -316,6 +317,7 @@ fn (w: ^Window) print*(fmt: str, a: ..any): int { return umc__wprintw(w._, fmt::
 //~~fn (^Window) printAt
 // Moves the cursor to (`x`,`y`) and prints a formatted string there.
 // Returns how many characters were written.
+//
 // The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
 //~~
