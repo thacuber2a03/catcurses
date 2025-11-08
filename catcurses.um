@@ -16,6 +16,9 @@ type (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+fn umc__initscr(): RawWindow
+fn umc__curscr(): RawWindow
+fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
 fn umc__set_term(term: RawTerminal): RawTerminal
 
 var curTerm, stdTerm: ^Terminal
@@ -81,10 +84,6 @@ fn stdTerminal*(): ^Terminal {
 // `termType`, `outf` and `inf` are ignored in this case.
 fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool)
 //~~
-
-fn umc__initscr(): RawWindow
-fn umc__curscr(): RawWindow
-fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
 
 fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool) {
 	if stdTerm == null { return stdTerminal(), true }

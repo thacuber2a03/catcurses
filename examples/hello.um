@@ -2,10 +2,8 @@ import (
 	cc = "../catcurses.um"
 )
 
-x, y := 0, 0
-
 fn main() {
-	t := cc::stdTerminal()
+	t := stdTerminal()
 	t.setRaw(true)
 	t.setEcho(false)
 	t.setHalfDelay(1)
@@ -13,9 +11,11 @@ fn main() {
 	w := t.window
 	w.keypad(true)
 
+	x, y := 0, 0
+
 	for true {
 		c, ok := w.getKey()
-		if c == cc::Key('q') { break }
+		if c == Key('q') { break }
 
 		switch c {
 		case .left: x--
@@ -25,7 +25,7 @@ fn main() {
 		}
 
 		w.clear()
-		w.printAt(x, y, "Test")
+		w.printAt(x, y, "Hello from catcurses!")
 		w.refresh()
 	}
 

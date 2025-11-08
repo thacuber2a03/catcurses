@@ -24,12 +24,10 @@ all: build docs
 build: $(TARGETS)
 
 run: build
-	$(UMKA) examples/hello.um
+	$(UMKA) $(NAME).um
 
-doc:
+docs:
 	mkdir -p doc
-
-docs: doc
 	$(UMKA) mmdoc/mmdoc.um -l umka -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
 
 clean:
