@@ -123,40 +123,42 @@ fn (t: ^Terminal) destroy*() {
 }
 
 //~~fn (^Terminal) raw
-// Sets the terminal to raw mode.
+// Enables/disables raw mode for the terminal.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
 // Reports whether the terminal was set/unset to raw mode.
-fn (t: ^Terminal) raw*(b: bool)
+fn (t: ^Terminal) raw*(b: bool): bool
 //~~
 
 fn umc__raw(): bool
 fn umc__noraw(): bool
 
-fn (t: ^Terminal) raw*(b: bool) {
+fn (t: ^Terminal) raw*(b: bool): bool {
 	std::assert(t == stdTerm, "can't call 'raw' on anything other than the standard terminal")
-	if b { return umc__raw() } else { return umc__noraw() }
+	if b { return umc__raw() }
+	return umc__noraw()
 }
 
 //~~fn (^Terminal) cbreak
-// Sets the terminal to cbreak mode (disables line buffering but still interprets signals).
+// Enables/disables cbreak mode (disables line buffering but still interprets signals) for the terminal.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
 // Reports whether the terminal was set/unset to cbreak mode.
-fn (t: ^Terminal) cbreak*(b: bool)
+fn (t: ^Terminal) cbreak*(b: bool): bool
 //~~
 
 fn umc__cbreak(): bool
 fn umc__nocbreak(): bool
 
-fn (t: ^Terminal) cbreak*(b: bool) {
+fn (t: ^Terminal) cbreak*(b: bool): bool {
 	std::assert(t == stdTerm, "can't call 'cbreak' on anything other than the standard terminal")
-	if b { return umc__cbreak() } else { return umc__nocbreak() }
+	if b { return umc__cbreak() }
+	return umc__nocbreak()
 }
 
 //~~fn (^Terminal) echo
 // Enables/disables character echoing after each keypress.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
 // Reports whether the echo was able to be set/unset.
-fn (t: ^Terminal) echo*(b: bool)
+fn (t: ^Terminal) echo*(b: bool): bool
 //~~
 
 fn umc__echo(): bool
@@ -164,20 +166,21 @@ fn umc__noecho(): bool
 
 fn (t: ^Terminal) echo*(b: bool): bool {
 	std::assert(t == stdTerm, "can't call 'echo' on anything other than the standard terminal")
-	if b { return umc__echo() } else { return umc__noecho() }
+	if b { return umc__echo() }
+	return umc__noecho()
 }
 
-//~~fn (^Terminal) setHalfDelay
-// Sets the terminal's half delay, in tenths of a second.
+//~~fn (^Terminal) halfDelay
+// Sets the terminal's half-delay, in tenths of a second.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
 // Reports whether the half delay was able to be changed.
-fn (t: ^Terminal) setHalfDelay*(n: int)
+fn (t: ^Terminal) halfDelay*(n: int): bool
 //~~
 
 fn umc__halfdelay(tenths: int): bool
 
-fn (t: ^Terminal) setHalfDelay*(n: int): bool {
-	std::assert(t == stdTerm, "can't call 'setHalfDelay' on anything other than the standard terminal")
+fn (t: ^Terminal) halfDelay*(n: int): bool {
+	std::assert(t == stdTerm, "can't call 'halfDelay' on anything other than the standard terminal")
 	return umc__halfdelay(n)
 }
 

@@ -137,7 +137,6 @@ fn getRecord(lines: []str, i: ^int): Record {
 }
 
 fn getRecords(lines: []str): []Record {
-	fprintf(std::stderr(), "%llv\n", lines)
 	recs := []Record{}
 
 	for i:=0; i < len(lines); i++ {

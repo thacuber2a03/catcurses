@@ -23,8 +23,8 @@ all: build docs
 
 build: $(TARGETS)
 
-run: build
-	$(UMKA) $(NAME).um
+run: build docs
+	$(UMKA) examples/hello.um
 
 docs:
 	mkdir -p doc

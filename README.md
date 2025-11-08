@@ -4,19 +4,19 @@ ncurses, abstracted around [Umka](https://github.com/vtereshkov/umka-lang).
 
 ```umka
 import (
-	cc = "catcurses.um"
+	cc = "../catcurses.um"
 )
-
-x, y := 0, 0
 
 fn main() {
 	t := cc::stdTerminal()
-	t.setRaw(true)
-	t.setEcho(false)
-	t.setHalfDelay(1)
+	t.raw(true)
+	t.echo(false)
+	t.halfDelay(1)
 
 	w := t.window
 	w.keypad(true)
+
+	x, y := 1, 2
 
 	for true {
 		c, ok := w.getKey()
@@ -30,12 +30,14 @@ fn main() {
 		}
 
 		w.clear()
-		w.printAt(x, y, "Hello catcurses!")
+		w.printAt(0, 0, "(Use the arrow keys to move the text around)")
+		w.printAt(x, y, "Hello from catcurses!")
 		w.refresh()
 	}
 
 	t.destroy()
 }
+
 ```
 
 <sub>[Link to the example](examples/hello.um)</sub>

@@ -1,4 +1,4 @@
-## [fn (^Terminal) makeCurrent](../catcurses.um#L26)
+## [fn (^Terminal) makeCurrent](../catcurses.um#L29)
 
 ```umka
 fn (t: ^Terminal) makeCurrent*(): bool
@@ -8,7 +8,7 @@ Makes `t` the "current" terminal; that is, the terminal whose associated window 
 Reports whether `t` was successfully set as the current terminal.
 
 
-## [fn curTerminal](../catcurses.um#L37)
+## [fn curTerminal](../catcurses.um#L40)
 
 ```umka
 fn curTerminal*(): ^Terminal
@@ -18,7 +18,7 @@ Returns the current terminal.
 See `fn (^Terminal) makeCurrent`.
 
 
-## [fn sessionExists](../catcurses.um#L45)
+## [fn sessionExists](../catcurses.um#L48)
 
 ```umka
 fn sessionExists*(): bool
@@ -28,7 +28,7 @@ Reports whether a terminal is set.
 (In most cases, this serves to check whether ncurses is initialized.)
 
 
-## [fn stdTerminal](../catcurses.um#L54)
+## [fn stdTerminal](../catcurses.um#L57)
 
 ```umka
 fn stdTerminal*(): ^Terminal
@@ -38,7 +38,7 @@ Returns the standard terminal.
 If ncurses hasn't been initialized yet, this function will initialize it.
 
 
-## [fn mkTerminal](../catcurses.um#L82)
+## [fn mkTerminal](../catcurses.um#L85)
 
 ```umka
 fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool)
@@ -52,7 +52,7 @@ If no terminal existed previously, initializes ncurses and returns a stub repres
 `termType`, `outf` and `inf` are ignored in this case.
 
 
-## [fn (^Terminal) destroy](../catcurses.um#L110)
+## [fn (^Terminal) destroy](../catcurses.um#L109)
 
 ```umka
 fn (t: ^Terminal) destroy*()
@@ -62,13 +62,13 @@ Destroys the underlying terminal. `t` is no longer valid for use after calling t
 If `t` is the standard terminal, this method will finalize ncurses.
 
 
-## [fn (^Terminal) raw](../catcurses.um#L130)
+## [fn (^Terminal) raw](../catcurses.um#L129)
 
 ```umka
-fn (t: ^Terminal) raw*(b: bool)
+fn (t: ^Terminal) raw*(b: bool): bool
 ```
 
-Sets the terminal to raw mode.
+Enables/disables raw mode for the terminal.
 Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the terminal was set/unset to raw mode.
 
@@ -76,18 +76,18 @@ Reports whether the terminal was set/unset to raw mode.
 ## [fn (^Terminal) cbreak](../catcurses.um#L145)
 
 ```umka
-fn (t: ^Terminal) cbreak*(b: bool)
+fn (t: ^Terminal) cbreak*(b: bool): bool
 ```
 
-Sets the terminal to cbreak mode (disables line buffering but still interprets signals).
+Enables/disables cbreak mode (disables line buffering but still interprets signals) for the terminal.
 Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the terminal was set/unset to cbreak mode.
 
 
-## [fn (^Terminal) echo](../catcurses.um#L160)
+## [fn (^Terminal) echo](../catcurses.um#L161)
 
 ```umka
-fn (t: ^Terminal) echo*(b: bool)
+fn (t: ^Terminal) echo*(b: bool): bool
 ```
 
 Enables/disables character echoing after each keypress.
@@ -95,18 +95,18 @@ Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the echo was able to be set/unset.
 
 
-## [fn (^Terminal) setHalfDelay](../catcurses.um#L175)
+## [fn (^Terminal) halfDelay](../catcurses.um#L177)
 
 ```umka
-fn (t: ^Terminal) setHalfDelay*(n: int)
+fn (t: ^Terminal) halfDelay*(n: int): bool
 ```
 
-Sets the terminal's half delay, in tenths of a second.
+Sets the terminal's half-delay, in tenths of a second.
 Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the half delay was able to be changed.
 
 
-## [type Key](../catcurses.um#L198)
+## [type Key](../catcurses.um#L200)
 
 ```umka
 type Key* = enum {
@@ -136,7 +136,7 @@ If getChar returns an ASCII keypress, the value wrapped under this enum will be 
 > *do not match* the values used by ncurses, and don't currently intend to do so.
 
 
-## [fn keyF](../catcurses.um#L219)
+## [fn keyF](../catcurses.um#L221)
 
 ```umka
 fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
@@ -145,7 +145,7 @@ fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
 Similar to ncurses' `KEY_F(n)` macro.
 
 
-## [fn (^Window) keypad](../catcurses.um#L225)
+## [fn (^Window) keypad](../catcurses.um#L227)
 
 ```umka
 fn (w: ^Window) keypad*(enable: bool): bool
@@ -155,7 +155,7 @@ Attempts to enable/disable function key detection in `w`.
 Reports whether it was able to do so.
 
 
-## [fn (^Window) print](../catcurses.um#L235)
+## [fn (^Window) print](../catcurses.um#L237)
 
 ```umka
 fn (w: ^Window) print*(fmt: str, a: ..any): int
@@ -166,7 +166,7 @@ Returns how many characters were written.
 The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 
 
-## [fn (^Window) printAt](../catcurses.um#L244)
+## [fn (^Window) printAt](../catcurses.um#L246)
 
 ```umka
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
@@ -177,7 +177,7 @@ Returns how many characters were written.
 The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 
 
-## [fn (^Window) getKey](../catcurses.um#L252)
+## [fn (^Window) getKey](../catcurses.um#L254)
 
 ```umka
 fn (w: ^Window) getKey*(): (Key, bool)
@@ -187,7 +187,7 @@ Returns the current keystroke, if any.
 Return values depend on the standard terminal's settings; check `man 3x getch` for information.
 
 
-## [fn (^Window) refresh](../catcurses.um#L276)
+## [fn (^Window) refresh](../catcurses.um#L278)
 
 ```umka
 fn (w: ^Window) refresh*(): bool { return umc__wrefresh(w._) }
@@ -196,7 +196,7 @@ fn (w: ^Window) refresh*(): bool { return umc__wrefresh(w._) }
 Redraws this window, if applicable.
 
 
-## [type Attribute](../catcurses.um#L281)
+## [type Attribute](../catcurses.um#L283)
 
 ```umka
 type Attribute = enum {
@@ -217,7 +217,7 @@ type Attribute = enum {
 All character attributes that can be toggled with `fn (^Window) attrOn`/`attrOff`.
 
 
-## [fn (^Window) attrOn](../catcurses.um#L298)
+## [fn (^Window) attrOn](../catcurses.um#L300)
 
 ```umka
 fn (w: ^Window) attrOn*(attrs: ..Attribute)
@@ -226,7 +226,7 @@ fn (w: ^Window) attrOn*(attrs: ..Attribute)
 Enables all the attributes listed in `attrs` (see `type Attribute`).
 
 
-## [fn (^Window) attrOff](../catcurses.um#L309)
+## [fn (^Window) attrOff](../catcurses.um#L311)
 
 ```umka
 fn (w: ^Window) attrOff*(attrs: ..Attribute)
@@ -235,7 +235,7 @@ fn (w: ^Window) attrOff*(attrs: ..Attribute)
 Disables all the attributes listed in `attrs` (see `type Attribute`).
 
 
-## [fn (^Window) clear](../catcurses.um#L320)
+## [fn (^Window) clear](../catcurses.um#L322)
 
 ```umka
 fn (w: ^Window) clear*(): bool
@@ -244,7 +244,7 @@ fn (w: ^Window) clear*(): bool
 Clears this window.
 
 
-## [fn (^Window) erase](../catcurses.um#L329)
+## [fn (^Window) erase](../catcurses.um#L331)
 
 ```umka
 fn (w: ^Window) erase*(): bool
