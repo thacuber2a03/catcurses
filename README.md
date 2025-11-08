@@ -2,20 +2,20 @@
 
 ncurses, abstracted around [Umka](https://github.com/vtereshkov/umka-lang).
 
-```umka
+```go
 import (
 	cc = "catcurses.um"
 )
 
 fn main() {
-	t := cc::stdTerminal()
-	t.raw(true)
-	t.echo(false)
+	term := cc::stdTerminal()
+	term.raw(true)
+	term.echo(false)
 
-	w := t.window
-	w.print("hello world!")
-	w.refresh()
-	w.getChar()
+	win := t.window
+	win.print("hello world!")
+	win.refresh()
+	win.getChar()
 
 	t.destroy()
 }
