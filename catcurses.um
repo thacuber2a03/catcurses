@@ -7,6 +7,8 @@ import (
 type (
 	RawWindow = ^void
 	RawTerminal = ^void
+	RawColorPair = uint
+	RawAttribute = int
 )
 
 type (
@@ -122,6 +124,10 @@ fn (t: ^Terminal) destroy*() {
 	umc__delscreen(t._)
 }
 
+fn assertStdTerm(t: ^Terminal, func: str) {
+	std::assert(t == stdTerm, sprintf("can't call '%s' on anything other than the standard terminal", func))
+}
+
 //~~fn (^Terminal) raw
 // Enables/disables raw mode for the terminal.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
@@ -133,7 +139,7 @@ fn umc__raw(): bool
 fn umc__noraw(): bool
 
 fn (t: ^Terminal) raw*(b: bool): bool {
-	std::assert(t == stdTerm, "can't call 'raw' on anything other than the standard terminal")
+	assertStdTerm(t, "raw")
 	if b { return umc__raw() }
 	return umc__noraw()
 }
@@ -149,7 +155,7 @@ fn umc__cbreak(): bool
 fn umc__nocbreak(): bool
 
 fn (t: ^Terminal) cbreak*(b: bool): bool {
-	std::assert(t == stdTerm, "can't call 'cbreak' on anything other than the standard terminal")
+	assertStdTerm(t, "cbreak")
 	if b { return umc__cbreak() }
 	return umc__nocbreak()
 }
@@ -165,7 +171,7 @@ fn umc__echo(): bool
 fn umc__noecho(): bool
 
 fn (t: ^Terminal) echo*(b: bool): bool {
-	std::assert(t == stdTerm, "can't call 'echo' on anything other than the standard terminal")
+	assertStdTerm(t, "echo")
 	if b { return umc__echo() }
 	return umc__noecho()
 }
@@ -180,15 +186,48 @@ fn (t: ^Terminal) halfDelay*(n: int): bool
 fn umc__halfdelay(tenths: int): bool
 
 fn (t: ^Terminal) halfDelay*(n: int): bool {
-	std::assert(t == stdTerm, "can't call 'halfDelay' on anything other than the standard terminal")
+	assertStdTerm(t, "halfDelay")
 	return umc__halfdelay(n)
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//~~type Visibility
+// Cursor visibility specifiers. See `fn (^Terminal) cursorVisibility`.
+type Visibility* = enum { hidden; visible; veryVisible }
+//~~
 
-fn umc__wprintw(win: RawWindow, s: str): int
-fn umc__mvwprintw(win: RawWindow, x, y: int, s: str): int
-fn umc__wrefresh(win: RawWindow): bool
+//~~fn (^Visibility) string
+// Returns the string representation of this visibility specifier.
+// For debugging purposes.
+fn (v: ^Visibility) string*(): str
+//~~
+
+fn (v: ^Visibility) string*(): str {
+	switch v^ {
+	case .hidden:      return "hidden"
+	case .visible:     return "visible"
+	case .veryVisible: return "veryVisible"
+	}
+	std::assert(false, "unreachable")
+	return ""
+}
+
+//~~fn (^Terminal) cursorVisibility
+// Changes the cursor visibility to `vis` (see `type Visibility`).
+// Must only be called on the standard terminal (see `fn stdTerminal`).
+// Returns the previous visibility and whether it was able to change it at all.
+fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool)
+//~~
+
+fn umc__curs_set(v: Visibility, prev: ^Visibility): bool
+
+fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool) {
+	var prev: Visibility
+	// I love that the enum maps directly to the value required
+	if !umc__curs_set(v, &prev) { return .hidden, false }
+	return prev, true
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //~~type Key
 // The enum wrapping the value returned by getChar.
@@ -200,10 +239,10 @@ fn umc__wrefresh(win: RawWindow): bool
 type Key* = enum {
 	escape = 0x1b
 
-	// Function keys (every single one is supported for completion)
+	// Function keys (every single one is supported for completion's sake)
 	f0 = 1000;
 	f1;  f2;  f3;  f4;  f5;  f6;  f7;  f8
-	f9 ; f10; f11; f12; f13; f14; f15; f16
+	f9;  f10; f11; f12; f13; f14; f15; f16
 	f17; f18; f19; f20; f21; f22; f23; f24
 	f25; f26; f27; f28; f29; f30; f31; f32
 	f33; f34; f35; f36; f37; f38; f39; f40
@@ -215,6 +254,40 @@ type Key* = enum {
 	down; up; left; right
 }
 //~~
+
+//~~fn (^Key) string
+// Returns the string representation of this key.
+// For debugging purposes.
+fn (k: ^Key) string*(): str
+//~~
+
+var keyStringReprs: map[Key]str
+
+// TODO(thacuber2a03): should likely automate this
+fn (k: ^Key) string*(): str {
+	if !valid(keyStringReprs) {
+		keyStringReprs = {
+			.escape: "escape",
+
+			.f0: "f0",
+			.f1: "f1",   .f2: "f2",   .f3: "f3",   .f4: "f4",   .f5: "f5",   .f6: "f6",   .f7: "f7",   .f8: "f8",
+			.f9: "f9",   .f10: "f10", .f11: "f11", .f12: "f12", .f13: "f13", .f14: "f14", .f15: "f15", .f16: "f16",
+			.f17: "f17", .f18: "f18", .f19: "f19", .f20: "f20", .f21: "f21", .f22: "f22", .f23: "f23", .f24: "f24",
+			.f25: "f25", .f26: "f26", .f27: "f27", .f28: "f28", .f29: "f29", .f30: "f30", .f31: "f31", .f32: "f32",
+			.f33: "f33", .f34: "f34", .f35: "f35", .f36: "f36", .f37: "f37", .f38: "f38", .f39: "f39", .f40: "f40",
+			.f41: "f41", .f42: "f42", .f43: "f43", .f44: "f44", .f45: "f45", .f46: "f46", .f47: "f47", .f48: "f48",
+			.f49: "f49", .f50: "f50", .f51: "f51", .f52: "f52", .f53: "f53", .f54: "f54", .f55: "f55", .f56: "f56",
+			.f57: "f57", .f58: "f58", .f59: "f59", .f60: "f60", .f61: "f61", .f62: "f62", .f63: "f63", .f64: "f64",
+
+			.down: "down", .up: "up", .left: "left", .right: "right",
+		}
+	}
+
+	return keyStringReprs[k^]
+}
+
+// for `fn (^Window) getChar` and for `keys` array reference in catcurses.c
+const otherKeyStart = Key.down
 
 //~~fn keyF
 // Similar to ncurses' `KEY_F(n)` macro.
@@ -237,6 +310,7 @@ fn (w: ^Window) keypad*(enable: bool): bool { return umc__keypad(w._, enable) }
 fn (w: ^Window) print*(fmt: str, a: ..any): int
 //~~
 
+fn umc__wprintw(win: RawWindow, s: str): int
 fn (w: ^Window) print*(fmt: str, a: ..any): int { return umc__wprintw(w._, fmt::vsfmt(fmt,  a)) }
 
 //~~fn (^Window) printAt
@@ -246,6 +320,7 @@ fn (w: ^Window) print*(fmt: str, a: ..any): int { return umc__wprintw(w._, fmt::
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
 //~~
 
+fn umc__mvwprintw(win: RawWindow, x, y: int, s: str): int
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int { return umc__mvwprintw(w._, x, y, fmt::vsfmt(fmt,  a)) }
 
 //~~fn (^Window) getKey
@@ -254,19 +329,19 @@ fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int { return umc__mvwpr
 fn (w: ^Window) getKey*(): (Key, bool)
 //~~
 
-fn umc__wgetch(win: RawWindow): (int, bool)
-fn umc__fnkeyoffset(key: int): int
-fn umc__otherkeyoffset(key: int): int
+fn umc__wgetch(win: RawWindow, c: ^int): bool
+fn umc__fn_key_offset(key: int): int
+fn umc__other_key_offset(key: int): int
 
 fn (w: ^Window) getKey*(): (Key, bool) {
-	c, ok := umc__wgetch(w._)
-	if !ok { return Key(0), false }
+	var c: int
+	if !umc__wgetch(w._, &c) { return Key(0), false }
 
 	if c >= 256 {
-		if offset := umc__fnkeyoffset(c); offset >= 0 && offset <= 64 {
+		if offset := umc__fn_key_offset(c); offset >= 0 && offset <= 64 {
 			return keyF(offset), true
-		} else if offset := umc__otherkeyoffset(c); offset != -1 {
-			return Key(int(Key.down)+offset), true
+		} else if offset := umc__other_key_offset(c); offset != -1 {
+			return Key(int(otherKeyStart)+offset), true
 		}
 	}
 
@@ -275,14 +350,17 @@ fn (w: ^Window) getKey*(): (Key, bool) {
 
 //~~fn (^Window) refresh
 // Redraws this window, if applicable.
-fn (w: ^Window) refresh*(): bool { return umc__wrefresh(w._) }
+fn (w: ^Window) refresh*(): bool
 //~~
 
+fn umc__wrefresh(win: RawWindow): bool
+fn (w: ^Window) refresh*(): bool { return umc__wrefresh(w._) }
+
 //~~type Attribute
-// All character attributes that can be toggled with `fn (^Window) attrOn`/`attrOff`.
+// All character attributes that can be toggled with the window attribute functions.
 type Attribute = enum {
 	normal     // Normal display (no highlight)
-	standout   // Best highlighting mode of the terminal
+	standOut   // Best highlighting mode of the terminal
 	underline  // Underlining
 	reverse    // Reverse video
 	blink      // Blinking
@@ -290,31 +368,131 @@ type Attribute = enum {
 	bold       // Extra bright or bold
 	protect    // Protected mode
 	invis      // Invisible or blank mode
-	altcharset // Alternate character set
+	altCharset // Alternate character set
 	italic     // Italics (non-X/Open extension)
 }
 //~~
 
-//~~fn (^Window) attrOn
-// Enables all the attributes listed in `attrs` (see `type Attribute`).
-fn (w: ^Window) attrOn*(attrs: ..Attribute)
+const attributesAmt = int(Attribute.italic)+1
+
+//~~fn (^Attribute) string
+// Returns the string representation of this attribute.
+// For debugging purposes.
+fn (a: ^Attribute) string*(): str
 //~~
 
-fn umc__wattron(win: RawWindow, a: int): int
-
-fn (w: ^Window) attrOn*(attrs: ..Attribute) {
-	for _,a in attrs { umc__wattron(w._, int(a)) }
+fn (a: ^Attribute) string*(): str {
+	switch a^ {
+	case .normal:     return "normal"
+	case .standOut:   return "standOut"
+	case .underline:  return "underline"
+	case .reverse:    return "reverse"
+	case .blink:      return "blink"
+	case .dim:        return "dim"
+	case .bold:       return "bold"
+	case .protect:    return "protect"
+	case .invis:      return "invis"
+	case .altCharset: return "altCharset"
+	case .italic:     return "italic"
+	}
+	std::assert(false, "unreachable")
+	return ""
 }
+
+fn umc__to_raw_attr(a: Attribute): RawAttribute
+// fn umc__from_raw_attr(a: RawAttribute): Attribute
+fn umc__wattr_on(win: RawWindow, a: RawAttribute): bool
+fn umc__wattr_off(win: RawWindow, a: RawAttribute): bool
+fn umc__wattr_get(win: RawWindow, attr: ^RawAttribute, pair: ^RawColorPair): bool
+fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: RawColorPair): bool
+
+//~~fn (^Window) attrOn
+// Enables all the attributes listed in `attrs` (see `type Attribute`).
+// Reports whether any of the attributes could not be enabled, and which one.
+fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute)
+//~~
 
 //~~fn (^Window) attrOff
 // Disables all the attributes listed in `attrs` (see `type Attribute`).
-fn (w: ^Window) attrOff*(attrs: ..Attribute)
+// Reports whether any of the attributes could not be disabled, and which one.
+fn (w: ^Window) attrOff*(attrs: ..Attribute): (bool, Attribute)
 //~~
 
-fn umc__wattroff(win: RawWindow, a: int): int
+//~~fn (^Window) attrListOn
+// Alternate version of `fn (^Window) attrOn` that explicitly takes a list.
+fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
+//~~
 
-fn (w: ^Window) attrOff*(attrs: ..Attribute) {
-	for _,a in attrs { umc__wattroff(w._, int(a)) }
+//~~fn (^Window) attrListOff
+// Alternate version of `fn (^Window) attrOff` that explicitly takes a list.
+fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
+//~~
+
+//~~fn (^Window) withAttrs
+// Runs `f` with all attributes in `attrs` enabled, and disables them when the function ends.
+fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(w: ^Window))
+//~~
+
+fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute) {
+	for _,a in attrs { if !umc__wattr_on(w._, umc__to_raw_attr(a)) { return false, a } }
+	return true, .normal
+}
+
+fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute) {
+	for _,a in attrs { if !umc__wattr_off(w._, umc__to_raw_attr(a)) { return false, a } }
+	return true, .normal
+}
+
+fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute) { return w.attrListOn(attrs) }
+fn (w: ^Window) attrOff*(attrs: ..Attribute): (bool, Attribute) { return w.attrListOff(attrs) }
+
+//~~fn (^Window) getAttributes
+// Returns the set of attributes and color pair currently applied to this window.
+// Returns `null` for the attributes map on error.
+//
+// > [!NOTE]
+// > Currently the color pair is just passed through (which is why it's raw);
+// > I've yet to abstract it out somehow, which is also why there aren't any colors yet.
+// >
+// > You can ignore it for now, or pass it straight to `fn (^Window) setAttributes`.
+fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, RawColorPair)
+//~~
+
+//~~fn (^Window) setAttributes
+// Overwrites the set attributes and color pair currently set for this window.
+//
+// > [!NOTE]
+// > See `fn (^Window) getAttributes`.
+fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: RawColorPair): bool
+//~~
+
+fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, RawColorPair) {
+	var (
+		pair: RawColorPair
+		attr: RawAttribute
+	)
+
+	if !umc__wattr_get(w._, &attr, &pair) { return null, 0 }
+
+	attrs := &map[Attribute]bool{}
+	for i := 0; i < attributesAmt; i++ {
+		a := Attribute(i)
+		if attr & umc__to_raw_attr(a) != 0 { attrs[a] = true }
+	}
+	return attrs, pair
+}
+
+fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: RawColorPair): bool {
+	var raw: RawAttribute
+	for a,_ in attrs { raw |= umc__to_raw_attr(a) }
+	return umc__wattr_set(w._, raw, pair)
+}
+
+fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(win: ^Window)) {
+	a, p := w.getAttributes()
+	w.attrListOn(attrs)
+	f(w)
+	w.setAttributes(a^, p)
 }
 
 //~~fn (^Window) clear
@@ -323,7 +501,6 @@ fn (w: ^Window) clear*(): bool
 //~~
 
 fn umc__clear(win: RawWindow): bool
-
 fn (w: ^Window) clear*(): bool { return umc__clear(w._) }
 
 //~~fn (^Window) erase
@@ -332,5 +509,17 @@ fn (w: ^Window) erase*(): bool
 //~~
 
 fn umc__erase(win: RawWindow): bool
-
 fn (w: ^Window) erase*(): bool { return umc__erase(w._) }
+
+//~~fn (^Window) getSize
+// Returns the x and y sizes of the window, in that order.
+fn (w: ^Window) getSize*(): (int, int)
+//~~
+
+fn umc__getmaxxy(win: RawWindow, x, y: ^int)
+
+fn (w: ^Window) getSize*(): (int, int) {
+	var x, y: int
+	umc__getmaxxy(w._, &x, &y)
+	return x, y
+}

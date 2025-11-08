@@ -1,9 +1,10 @@
 NAME := catcurses
-UMKA?=umbox/umka/umka
+UMKA ?= umbox/umka/umka
 
 CFLAGS := \
 	-Wall        \
 	-Wextra      \
+	-Werror      \
 	-pedantic    \
 	-std=c11     \
 	-Iumbox/umka \
@@ -14,20 +15,21 @@ LDFLAGS := -lncurses
 
 TARGETS=$(NAME)_linux.umi
 
-.PHONY: all build run docs clean distclean
+.PHONY: all build run clean distclean
 
-all: build docs
+all: build doc/$(NAME).md
 
 %_linux.umi: %.c Makefile
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) $< -o $@
 
 build: $(TARGETS)
 
-run: build docs
+run: build doc/$(NAME).md
 	$(UMKA) examples/hello.um
 
-docs:
+doc:
 	mkdir -p doc
+doc/$(NAME).md: doc $(NAME).um
 	$(UMKA) mmdoc/mmdoc.um -l umka -u "../$(NAME).um#L%d" $(NAME).um > doc/$(NAME).md
 
 clean:

@@ -2,20 +2,26 @@ import (
 	cc = "../catcurses.um"
 )
 
+const (
+	exitKey = cc::Key('q')
+	msg = "Hello from catcurses!"
+)
+
+x, y := 0, 3
+
 fn main() {
-	t := cc::stdTerminal()
-	t.raw(true)
-	t.echo(false)
-	t.halfDelay(1)
+	term := cc::stdTerminal()
+	term.raw(true)
+	term.echo(false)
+	term.halfDelay(1)
+	term.cursorVisibility(.hidden)
 
-	w := t.window
-	w.keypad(true)
-
-	x, y := 1, 2
+	win := term.window
+	win.keypad(true)
 
 	for true {
-		c, ok := w.getKey()
-		if c == cc::Key('q') { break }
+		c, ok := win.getKey()
+		if c == exitKey { break }
 
 		switch c {
 		case .left: x--
@@ -24,12 +30,22 @@ fn main() {
 		case .down: y++
 		}
 
-		w.clear()
-		w.printAt(0, 0, "(Use the arrow keys to move the text around)")
-		w.printAt(x, y, "Hello from catcurses!")
-		w.refresh()
+		w, h := win.getSize()
+		if y < 0 { y = 0 } else if y >= h { y = h-1 }
+		if x < 0 { x = 0 } else if x >= w-len(msg) { x = w-len(msg) }
+
+		win.clear()
+
+		win.withAttrs({.italic}, {
+			win.printAt(0, 0, "Use the arrow keys to move the reverse text around\n")
+			win.printAt(0, 1, "Press {} to exit", char(exitKey))
+		})
+
+		win.withAttrs({.reverse}, { win.printAt(x, y, msg) })
+
+		win.refresh()
 	}
 
-	t.destroy()
+	term.destroy()
 }
 
