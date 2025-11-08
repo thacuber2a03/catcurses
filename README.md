@@ -12,12 +12,12 @@ fn main() {
 	term.raw(true)
 	term.echo(false)
 
-	win := t.window
+	win := term.window
 	win.print("hello world!")
 	win.refresh()
 	win.getChar()
 
-	t.destroy()
+	term.destroy()
 }
 
 ```
