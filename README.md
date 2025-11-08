@@ -4,7 +4,7 @@ ncurses, abstracted around [Umka](https://github.com/vtereshkov/umka-lang).
 
 ```umka
 import (
-	cc = "../catcurses.um"
+	cc = "catcurses.um"
 )
 
 fn main() {
