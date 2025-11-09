@@ -19,7 +19,6 @@ fn main() {
 
 	term.destroy()
 }
-
 ```
 
 See [the examples folder](./examples) for more.

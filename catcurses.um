@@ -414,8 +414,8 @@ fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //~~type Key
-// The enum wrapping the value returned by getChar.
-// If getChar returns an ASCII keypress, the value wrapped under this enum will be that key.
+// The enum wrapping the value returned by getKey.
+// If getKey returns an ASCII keypress, the value wrapped under this enum will be that key.
 //
 // > [!WARNING]
 // > The function keys (F0..F64 and arrow keys, amongst others)
@@ -470,7 +470,7 @@ fn (k: ^Key) string*(): str {
 	return keyStringReprs[k^]
 }
 
-// for `fn (^Window) getChar` and for `keys` array reference in catcurses.c
+// for `fn (^Window) getKey` and for `keys` array reference in catcurses.c
 const otherKeyStart = int(Key.down)
 
 //~~fn keyF
