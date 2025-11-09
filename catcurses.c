@@ -118,8 +118,8 @@ API_FN(fn_key_offset)
     umkaGetResult(params, result)->intVal = key - KEY_F0;
 }
 
-// the order of this array must match the order of
-// all keys listed after the one otherKeyStart refers to in catcurses.um
+// must match the order of all keys listed
+// after the one otherKeyStart refers to in catcurses.um
 static int keys[] = {
     KEY_DOWN,
     KEY_UP,
@@ -153,6 +153,14 @@ API_FN(to_raw_attr)
     int attr = umkaGetParam(params, 0)->intVal;
 
     umkaGetResult(params, result)->intVal = attributes[attr];
+}
+
+// fn umc__to_raw_color_pair(a: Attribute): RawAttribute
+API_FN(to_raw_color_pair)
+{
+    int colorPair = umkaGetParam(params, 0)->intVal;
+
+    umkaGetResult(params, result)->intVal = COLOR_PAIR(colorPair);
 }
 
 // fn umc__from_raw_attr(a: RawAttribute): Attribute
@@ -213,20 +221,82 @@ API_FN(curs_set)
     RET_CHECK_ERR(*prev = curs_set(v));
 }
 
-// fn umc__wattr_get(win: RawWindow, attr: ^RawAttribute, pair: ^RawColorPair): bool
+// fn umc__wattr_get(win: RawWindow, attr: ^RawAttribute, pair: ^ColorPairID): bool
 API_FN(wattr_get)
 {
     WINDOW *w = GET_WINDOW(params, 0);
     attr_t *a = umkaGetParam(params, 1)->ptrVal;
-    short *p  = umkaGetParam(params, 1)->ptrVal;
+    short *p  = umkaGetParam(params, 2)->ptrVal;
     RET_CHECK_ERR(wattr_get(w, a, p, NULL)); // that one Cardi B song
 }
 
-// fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: RawColorPair): bool
+// fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: ColorPairID): bool
 API_FN(wattr_set)
 {
     WINDOW *w = GET_WINDOW(params, 0);
     attr_t a  = umkaGetParam(params, 1)->uintVal;
-    short p   = umkaGetParam(params, 1)->intVal;
+    short p   = umkaGetParam(params, 2)->intVal;
     RET_CHECK_ERR(wattr_set(w, a, p, NULL)); // again
 }
+
+// fn umc__has_colors_sp(term: RawTerminal): bool
+API_FN(has_colors_sp) { umkaGetResult(params, result)->intVal = has_colors_sp(GET_SCREEN(params, 0)); }
+
+// fn umc__can_change_color_sp(term: RawTerminal): bool
+API_FN(can_change_color_sp) { umkaGetResult(params, result)->intVal = can_change_color_sp(GET_SCREEN(params, 0)); }
+
+// fn umc__start_color_sp(term: RawTerminal): bool
+API_FN(start_color_sp) { RET_CHECK_ERR(start_color_sp(GET_SCREEN(params, 0))); }
+
+// fn umc__get_current_max_colors(): int
+API_FN(get_current_max_colors) { umkaGetResult(params, result)->intVal = COLORS; }
+
+// must match the enum in catcurses.um
+static int standardColors[] = {
+    COLOR_BLACK,       //
+    COLOR_RED,         //
+    COLOR_GREEN,       //
+    COLOR_YELLOW,      //
+    COLOR_BLUE,        //
+    COLOR_MAGENTA,     //
+    COLOR_CYAN,        //
+    COLOR_WHITE,       //
+    COLOR_BLACK + 8,   //
+    COLOR_RED + 8,     //
+    COLOR_GREEN + 8,   //
+    COLOR_YELLOW + 8,  //
+    COLOR_BLUE + 8,    //
+    COLOR_MAGENTA + 8, //
+    COLOR_CYAN + 8,    //
+    COLOR_WHITE + 8,   //
+};
+
+// fn umc__to_raw_standard_color(c: StandardColor): RawStandardColor
+API_FN(to_raw_standard_color)
+{
+    int stdColor = umkaGetParam(params, 0)->intVal;
+
+    umkaGetResult(params, result)->intVal = standardColors[stdColor];
+}
+
+// fn umc__init_pair_sp(term: RawTerminal, pair: ColorPairID, bg, fg: RawStandardColor): bool
+API_FN(init_pair_sp)
+{
+    SCREEN *s = GET_SCREEN(params, 0);
+    short p   = umkaGetParam(params, 1)->intVal;
+    int bg    = umkaGetParam(params, 2)->intVal;
+    int fg    = umkaGetParam(params, 3)->intVal;
+    RET_CHECK_ERR(init_pair_sp(s, p, fg, bg));
+}
+
+// fn umc__init_color_sp(term: RawTerminal, color, r, g, b: int): bool
+API_FN(init_color_sp)
+{
+    SCREEN *s = GET_SCREEN(params, 0);
+    short c   = umkaGetParam(params, 1)->intVal;
+    short r   = umkaGetParam(params, 2)->intVal;
+    short g   = umkaGetParam(params, 3)->intVal;
+    short b   = umkaGetParam(params, 4)->intVal;
+    RET_CHECK_ERR(init_color_sp(s, c, r, g, b));
+}
+

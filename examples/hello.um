@@ -7,7 +7,7 @@ const (
 	msg = "Hello from catcurses!"
 )
 
-x, y := 0, 3
+x, y := 2, 3
 
 fn main() {
 	term := cc::stdTerminal()
@@ -15,6 +15,10 @@ fn main() {
 	term.echo(false)
 	term.halfDelay(1)
 	term.cursorVisibility(.hidden)
+
+	term.enableColors()
+	term.setColorHex(cc::darkGray, 0x444444)
+	infoTextPair := term.addColorPair(.black, cc::darkGray)
 
 	win := term.window
 	win.keypad(true)
@@ -36,9 +40,9 @@ fn main() {
 
 		win.clear()
 
-		win.withAttrs({.italic}, {
+		win.withAttrsAndColorPair({.italic}, infoTextPair, {
 			win.printAt(0, 0, "Use the arrow keys to move the reverse text around\n")
-			win.printAt(0, 1, "Press {} to exit", char(exitKey))
+			win.printAt(0, 1, "Press {} to exit\n", char(exitKey))
 		})
 
 		win.withAttrs({.reverse}, { win.printAt(x, y, msg) })

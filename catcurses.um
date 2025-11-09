@@ -9,40 +9,42 @@ type (
 	RawTerminal = ^void
 	RawColorPair = uint
 	RawAttribute = int
+	RawStandardColor = int
 )
 
+//~~type Window and type Terminal
+// The main abstractions for a terminal and a window in the library.
 type (
-	Window* = struct { _: RawWindow }
-	Terminal* = struct { _: RawTerminal; window: Window }
+	Window* = struct { _: RawWindow
+		// Reference back to the terminal owning this window.
+		terminal: weak ^Terminal
+	}
+
+	Terminal* = struct { _: RawTerminal
+		// The main window owned by this terminal.
+		window: Window
+
+		// The maximum amount of colors supported in this terminal.
+		// Set on creation (see `fn newTerminal`).
+		maxColors: int
+
+		// The amount of color pairs currently allocated.
+		// Used internally, but can be modified.
+		pairAmt: int
+	}
 )
+//~~
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-fn umc__initscr(): RawWindow
-fn umc__curscr(): RawWindow
-fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
 fn umc__set_term(term: RawTerminal): RawTerminal
 
 var curTerm, stdTerm: ^Terminal
-
-//~~fn (^Terminal) makeCurrent
-// Makes `t` the "current" terminal; that is, the terminal whose associated window is shown on-screen.
-// Reports whether `t` was successfully set as the current terminal.
-fn (t: ^Terminal) makeCurrent*(): bool
-//~~
 
 fn makeCurrent(t: ^Terminal): bool {
 	curTerm = t
 	return umc__set_term(t._) != null
 }
-
-//~~fn curTerminal
-// Returns the current terminal.
-// See `fn (^Terminal) makeCurrent`.
-fn curTerminal*(): ^Terminal
-//~~
-
-fn curTerminal*(): ^Terminal { return curTerm }
 
 //~~fn sessionExists
 // Reports whether a terminal is set.
@@ -53,26 +55,44 @@ fn sessionExists*(): bool
 // this function is funny
 fn sessionExists*(): bool { return curTerm != null }
 
+//~~fn curTerminal
+// Returns the current terminal.
+// See `fn (^Terminal) makeCurrent`.
+fn curTerminal*(): ^Terminal
+//~~
+
+fn curTerminal*(): ^Terminal { return curTerm }
+
+//~~fn (^Terminal) makeCurrent
+// Makes `t` the "current" terminal; that is, the terminal whose associated window is shown on-screen.
+// Reports whether `t` was successfully set as the current terminal.
+fn (t: ^Terminal) makeCurrent*(): bool
+//~~
+
+fn (t: ^Terminal) makeCurrent*(): bool { return makeCurrent(t) }
+
 //~~fn stdTerminal
 // Returns the standard terminal.
 // If ncurses hasn't been initialized yet, this function will initialize it.
 fn stdTerminal*(): ^Terminal
 //~~
 
+fn umc__initscr(): RawWindow
+
 fn stdTerminal*(): ^Terminal {
 	if stdTerm == null {
 		w := umc__initscr()
 		std::assert(w != null, "couldn't initialize ncurses")
-		// this is ugly, but, eh
+
+		// this is ugly but meh
 		s := umc__set_term(null)
 		umc__set_term(s)
-		stdTerm = &Terminal{ _: s, window: {w} }
+		stdTerm = &Terminal{ _: s }
+		stdTerm.window = { _: w, terminal: stdTerm }
+		stdTerm.makeCurrent()
 
-		// this shouldn't be an issue, cause mkTerminal calls this function
-		// and the only access to the stdTerm the user has is either that function or this one
-		//
-		// though, it's still rather iffy to see this random assignment here
-		curTerm = stdTerm
+		std::assert(w == stdTerm.window._,
+			sprintf("initscr window doesn't match stdTerm.window._: %llv vs %llv", w, stdTerm.window._))
 	}
 	return stdTerm
 }
@@ -87,6 +107,9 @@ fn stdTerminal*(): ^Terminal {
 fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool)
 //~~
 
+fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
+fn umc__curscr(): RawWindow
+
 fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool) {
 	if stdTerm == null { return stdTerminal(), true }
 
@@ -94,16 +117,177 @@ fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null
 	if outf == null   { outf     = std::stdout()       }
 	if inf == null    { inf      = std::stdin()        }
 
-	t := umc__newterm(termType, std::stdout(), std::stdin())
-	if t == null { return null, false }
+	raw := umc__newterm(termType, std::stdout(), std::stdin())
+	if raw == null { return null, false }
 
-	old := umc__set_term(t)
+	term := &Terminal{ _: raw }
+	old := umc__set_term(raw)
 	w := umc__curscr()
 	umc__set_term(old)
-	return &Terminal{ _: t, window: {w} }, true
+	term.window = { _: w, terminal: term }
+	return term, true
 }
 
-fn (t: ^Terminal) makeCurrent*(): bool { return makeCurrent(t) }
+//~~type ColorPairID
+// Identifies a specific, preinitialized color pair.
+type ColorPairID* = int
+//~~
+
+//~~fn (^ColorPairID) string
+// Returns the string representation of this color pair identifier.
+// For debugging purposes.
+fn (c: ^ColorPairID) string*(): str { return sprintf("<color pair %d>", c^) }
+//~~
+
+fn umc__to_raw_color_pair(a: ColorPairID): RawColorPair
+
+fn (a: ^ColorPairID) raw(): uint { return umc__to_raw_color_pair(a^) }
+
+//~~type StandardColor
+// Indices to the standard terminal colors.
+type StandardColor* = enum {
+	black
+	red
+	green
+	yellow
+	blue
+	magenta
+	cyan
+	white
+
+	// "Bright" colors
+	brightBlack
+	brightRed
+	brightGreen
+	brightYellow
+	brightBlue
+	brightMagenta
+	brightCyan
+	brightWhite
+}
+
+// Aliases
+const (
+	gray* = StandardColor.white
+	darkGray* = StandardColor.brightBlack
+)
+//~~
+
+const maxStandardColors = int(StandardColor.brightWhite)+1
+
+//~~fn (^Terminal) supportsColors
+// Reports whether this terminal supports colors.
+fn (t: ^Terminal) supportsColors*(): bool
+//~~
+
+fn umc__has_colors_sp(term: RawTerminal): bool
+
+fn (t: ^Terminal) supportsColors*(): bool { return umc__has_colors_sp(t._) }
+
+//~~fn (^Terminal) canChangeColors
+// Reports whether this terminal can change its colors.
+fn (t: ^Terminal) canChangeColors*(): bool
+//~~
+
+fn umc__can_change_color_sp(term: RawTerminal): bool
+
+fn (t: ^Terminal) canChangeColors*(): bool { return umc__can_change_color_sp(t._) }
+
+//~~fn (^Terminal) enableColors
+// Enables color capability. Returns whether it was enabled.
+fn (t: ^Terminal) enableColors*(): bool
+//~~
+
+fn umc__start_color_sp(term: RawTerminal): bool
+fn umc__get_current_max_colors(): int
+
+fn (t: ^Terminal) enableColors*(): bool {
+	if umc__start_color_sp(t._) {
+		t.maxColors = umc__get_current_max_colors()
+		return true
+	}
+	return false
+}
+
+//~~fn (^Terminal) setColorPair
+// Associates `pair` with `bg` and `fg` as background/foreground colors.
+fn (t: ^Terminal) setColorPair*(pair: ColorPairID, bg, fg: StandardColor): bool
+//~~
+
+fn umc__to_raw_standard_color(c: StandardColor): RawStandardColor
+fn umc__init_pair_sp(term: RawTerminal, pair: ColorPairID, bg, fg: RawStandardColor): bool
+
+fn (t: ^Terminal) setColorPair*(pair: ColorPairID, bg, fg: StandardColor): bool {
+	return umc__init_pair_sp(t._, pair,
+		umc__to_raw_standard_color(bg),
+		umc__to_raw_standard_color(fg)
+	)
+}
+
+//~~fn (t: ^Terminal) addColorPair
+// Allocates a new color pair, with `bg` and `fg` as background/foreground colors, and returns its ID.
+fn (t: ^Terminal) addColorPair*(bg, fg: StandardColor): ColorPairID
+//~~
+
+fn (t: ^Terminal) addColorPair*(bg, fg: StandardColor): ColorPairID {
+	t.pairAmt++ // 1-indexed, cause IIRC the 0th pair is reserved
+	newPair := t.pairAmt
+	if !t.setColorPair(newPair, bg, fg) { return -1 }
+	return newPair
+}
+
+//~~fn (^Terminal) setColor
+// Changes the RGB values associated with `color` to `r`, `g` and `b`.
+// `r`, `g` and `b` should be normalized floats (0-1, they will be clamped if outside that range),
+// and will be quantized to a 0-1000 integer range for ncurses.
+//
+// This function will affect every color pair using `color` as a palette entry.
+//
+// It will do nothing (and return `false`) if:
+// - the terminal doesn't support colors (see `fn (^Terminal) supportsColors`),
+// - the colors are unable to be changed (see `fn (^Terminal) canChangeColors`), or
+// - `color` is outside the range of colors the terminal can support (see `type Terminal`)
+fn (t: ^Terminal) setColor*(color: StandardColor, r, g, b: real): bool
+//~~
+
+fn umc__init_color_sp(term: RawTerminal, color, r, g, b: int): bool
+
+fn (t: ^Terminal) setColor*(color: StandardColor, r, g, b: real): bool {
+	if !(t.supportsColors() && t.canChangeColors())     { return false }
+
+	raw := int(color)
+	if raw < 0 || raw >= t.maxColors { return false }
+
+	if r < 0.0 { r = 0.0 } else if r >= 1.0 { r = 1.0 }
+	if g < 0.0 { g = 0.0 } else if g >= 1.0 { g = 1.0 }
+	if b < 0.0 { b = 0.0 } else if b >= 1.0 { b = 1.0 }
+
+	ir, ig, ib := round(r * 1000.0), round(g * 1000.0), round(b * 1000.0)
+
+	return umc__init_color_sp(t._, raw, ir, ig, ib)
+}
+
+//~~fn (^Terminal) setColorBytes
+// Alternate version of `fn (^Terminal) setColor` that takes in byte values (0-255).
+fn (t: ^Terminal) setColorBytes*(color: StandardColor, r, g, b: uint8): bool
+//~~
+
+fn (t: ^Terminal) setColorBytes*(color: StandardColor, r, g, b: uint8): bool {
+	return t.setColor(color, real(r) / 255.0, real(g) / 255.0, real(b) / 255.0)
+}
+
+//~~fn (^Terminal) setColorHex
+// Alternate version of `fn (^Terminal) setColor` that takes in a full hex value (0xRRGGBB).
+fn (t: ^Terminal) setColorHex*(color: StandardColor, rgb: uint32): bool
+//~~
+
+fn (t: ^Terminal) setColorHex*(color: StandardColor, rgb: uint32): bool {
+	return t.setColorBytes(color,
+		uint8((rgb >> 16) & 0xff),
+		uint8((rgb >> 8) & 0xff),
+		uint8(rgb & 0xff)
+	)
+}
 
 //~~fn (^Terminal) destroy
 // Destroys the underlying terminal. `t` is no longer valid for use after calling this method.
@@ -287,7 +471,7 @@ fn (k: ^Key) string*(): str {
 }
 
 // for `fn (^Window) getChar` and for `keys` array reference in catcurses.c
-const otherKeyStart = Key.down
+const otherKeyStart = int(Key.down)
 
 //~~fn keyF
 // Similar to ncurses' `KEY_F(n)` macro.
@@ -343,7 +527,7 @@ fn (w: ^Window) getKey*(): (Key, bool) {
 		if offset := umc__fn_key_offset(c); offset >= 0 && offset <= 64 {
 			return keyF(offset), true
 		} else if offset := umc__other_key_offset(c); offset != -1 {
-			return Key(int(otherKeyStart)+offset), true
+			return Key(otherKeyStart+offset), true
 		}
 	}
 
@@ -359,8 +543,8 @@ fn umc__wrefresh(win: RawWindow): bool
 fn (w: ^Window) refresh*(): bool { return umc__wrefresh(w._) }
 
 //~~type Attribute
-// All character attributes that can be toggled with the window attribute functions.
-type Attribute = enum {
+// Color-independent character attributes.
+type Attribute* = enum {
 	normal     // Normal display (no highlight)
 	standOut   // Best highlighting mode of the terminal
 	underline  // Underlining
@@ -375,10 +559,10 @@ type Attribute = enum {
 }
 //~~
 
-const attributesAmt = int(Attribute.italic)+1
+const charAttributesAmt = int(Attribute.italic)+1
 
 //~~fn (^Attribute) string
-// Returns the string representation of this attribute.
+// Returns the string representation of this character attribute.
 // For debugging purposes.
 fn (a: ^Attribute) string*(): str
 //~~
@@ -402,11 +586,14 @@ fn (a: ^Attribute) string*(): str {
 }
 
 fn umc__to_raw_attr(a: Attribute): RawAttribute
+
+fn (a: ^Attribute) raw(): uint { return umc__to_raw_attr(a^) }
+
 // fn umc__from_raw_attr(a: RawAttribute): Attribute
 fn umc__wattr_on(win: RawWindow, a: RawAttribute): bool
 fn umc__wattr_off(win: RawWindow, a: RawAttribute): bool
-fn umc__wattr_get(win: RawWindow, attr: ^RawAttribute, pair: ^RawColorPair): bool
-fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: RawColorPair): bool
+fn umc__wattr_get(win: RawWindow, attr: ^RawAttribute, pair: ^ColorPairID): bool
+fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: ColorPairID): bool
 
 //~~fn (^Window) attrOn
 // Enables all the attributes listed in `attrs` (see `type Attribute`).
@@ -430,71 +617,108 @@ fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
 fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
 //~~
 
-//~~fn (^Window) withAttrs
-// Runs `f` with all attributes in `attrs` enabled, and disables them when the function ends.
-fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(w: ^Window))
-//~~
-
 fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute) {
-	for _,a in attrs { if !umc__wattr_on(w._, umc__to_raw_attr(a)) { return false, a } }
+	for _,a in attrs { if !umc__wattr_on(w._, a.raw()) { return false, a } }
 	return true, .normal
 }
 
 fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute) {
-	for _,a in attrs { if !umc__wattr_off(w._, umc__to_raw_attr(a)) { return false, a } }
+	for _,a in attrs { if !umc__wattr_off(w._, a.raw()) { return false, a } }
 	return true, .normal
 }
 
-fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute) { return w.attrListOn(attrs) }
+fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute)  { return w.attrListOn(attrs)  }
 fn (w: ^Window) attrOff*(attrs: ..Attribute): (bool, Attribute) { return w.attrListOff(attrs) }
 
 //~~fn (^Window) getAttributes
 // Returns the set of attributes and color pair currently applied to this window.
 // Returns `null` for the attributes map on error.
-//
-// > [!NOTE]
-// > Currently the color pair is just passed through (which is why it's raw);
-// > I've yet to abstract it out somehow, which is also why there aren't any colors yet.
-// >
-// > You can ignore it for now, or pass it straight to `fn (^Window) setAttributes`.
-fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, RawColorPair)
+fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, ColorPairID)
 //~~
 
 //~~fn (^Window) setAttributes
 // Overwrites the set attributes and color pair currently set for this window.
-//
-// > [!NOTE]
-// > See `fn (^Window) getAttributes`.
-fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: RawColorPair): bool
+fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: ColorPairID): bool
 //~~
 
-fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, RawColorPair) {
+fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, ColorPairID) {
 	var (
-		pair: RawColorPair
 		attr: RawAttribute
+		pair: ColorPairID
 	)
 
-	if !umc__wattr_get(w._, &attr, &pair) { return null, 0 }
+	if !umc__wattr_get(w._, &attr, &pair) { return null, -1 }
 
 	attrs := &map[Attribute]bool{}
-	for i := 0; i < attributesAmt; i++ {
+	for i := 0; i < charAttributesAmt; i++ {
 		a := Attribute(i)
-		if attr & umc__to_raw_attr(a) != 0 { attrs[a] = true }
+		if attr & a.raw() != 0 { attrs[a] = true }
 	}
 	return attrs, pair
 }
 
-fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: RawColorPair): bool {
+fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: ColorPairID): bool {
 	var raw: RawAttribute
-	for a,_ in attrs { raw |= umc__to_raw_attr(a) }
+	for a,b in attrs { if b { raw |= a.raw() } }
 	return umc__wattr_set(w._, raw, pair)
 }
 
-fn (w: ^Window) withAttrs*(attrs: []Attribute, f: fn(win: ^Window)) {
+//~~fn (^Window) useColorPair
+// Sets `pair` as the current color pair for this window's text output.
+// Reports whether it could not be set.
+fn (w: ^Window) useColorPair*(pair: ColorPairID): bool
+//~~
+
+//~~fn (^Window) detachColorPair
+// Stops using `pair` as the current color pair for this window's text output.
+// Reports whether it could not be disabled.
+fn (w: ^Window) detachColorPair*(pair: ColorPairID): bool
+//~~
+
+fn (w: ^Window) useColorPair*(pair: ColorPairID): bool    { return umc__wattr_on(w._, pair.raw())  }
+fn (w: ^Window) detachColorPair*(pair: ColorPairID): bool { return umc__wattr_off(w._, pair.raw()) }
+
+//~~type WithFn
+// Function type taken as argument by all `fn (^Window) with*` functions.
+type WithFn* = fn(win: ^Window)
+//~~
+
+//~~fn (^Window) withAttrs
+// Runs `f` with all attributes in `attrs` enabled, and disables them when the function ends.
+fn (w: ^Window) withAttrs*(attrs: []Attribute, f: WithFn)
+//~~
+
+fn (w: ^Window) withAttrs*(attrs: []Attribute, f: WithFn) {
 	a, p := w.getAttributes()
+	std::assert(a != null, "couldn't get attributes for withAttrs")
 	w.attrListOn(attrs)
 	f(w)
 	w.setAttributes(a^, p)
+}
+
+//~~fn (^Window) withColorPair
+// Runs `f` with `pair` set as the current color pair, and unsets it when the function ends.
+fn (w: ^Window) withColorPair*(pair: ColorPairID, f: WithFn)
+//~~
+
+fn (w: ^Window) withColorPair*(pair: ColorPairID, f: WithFn) {
+	a, p := w.getAttributes()
+	std::assert(a != null, "couldn't get color pair for withColorPair")
+	w.useColorPair(pair)
+	f(w)
+	w.setAttributes(a^, p)
+}
+
+//~~fn (^Window) withAttrsAndColorPair
+// Shorthand for:
+// ```go
+// win.withAttrs(attrs, { win.withColorPair(pair, f) })
+// ```
+fn (w: ^Window) withAttrsAndColorPair*(attrs: []Attribute, pair: ColorPairID, f: WithFn)
+//~~
+
+fn (w: ^Window) withAttrsAndColorPair*(attrs: []Attribute, pair: ColorPairID, f: WithFn) {
+	w.withAttrs(attrs, |pair, f| { win.withColorPair(pair, f) })
 }
 
 //~~fn (^Window) clear
