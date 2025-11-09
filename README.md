@@ -15,7 +15,7 @@ fn main() {
 	win := term.window
 	win.print("hello world!")
 	win.refresh()
-	win.getChar()
+	win.getKey()
 
 	term.destroy()
 }
