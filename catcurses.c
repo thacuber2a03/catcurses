@@ -1,15 +1,15 @@
-// TODO(thacuber2a03): order this file better
+// TODO(thacuber2a03): (rder this file better
 
 #include <ncurses.h>
 
 #include <umka_api.h>
 
-#define RET_CHECK_ERR(e) (api->umkaGetResult(params, result)->uintVal = (e) != ERR)
+#define RET_CHECK_ERR(a, e) ((a)->umkaGetResult(params, result)->uintVal = (e) != ERR)
 
-#define GET_WINDOW(p, i) ((WINDOW *)api->umkaGetParam(p, i)->ptrVal)
-#define GET_SCREEN(p, i) ((SCREEN *)api->umkaGetParam(p, i)->ptrVal)
-#define RET_WINDOW(p, r) (*(WINDOW **)api->umkaGetResult(p, r))
-#define RET_SCREEN(p, r) (*(SCREEN **)api->umkaGetResult(p, r))
+#define GET_WINDOW(a, p, i) ((WINDOW *)(a)->umkaGetParam(p, i)->ptrVal)
+#define GET_SCREEN(a, p, i) ((SCREEN *)(a)->umkaGetParam(p, i)->ptrVal)
+#define RET_WINDOW(a, p, r) (*(WINDOW **)(a)->umkaGetResult(p, r))
+#define RET_SCREEN(a, p, r) (*(SCREEN **)(a)->umkaGetResult(p, r))
 
 #define ARRLEN(a) (sizeof(a) / sizeof((a)[0]))
 #define UNUSED(x) ((void)(x))
@@ -22,7 +22,7 @@ API_FN(initscr)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    RET_WINDOW(params, result) = initscr();
+    RET_WINDOW(api, params, result) = initscr();
 }
 
 // fn umc__curscr(): RawWindow
@@ -31,7 +31,7 @@ API_FN(curscr)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    RET_WINDOW(params, result) = curscr;
+    RET_WINDOW(api, params, result) = curscr;
 }
 
 // fn umc__endwin(): bool
@@ -40,15 +40,16 @@ API_FN(endwin)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    RET_CHECK_ERR(endwin());
+    RET_CHECK_ERR(api, endwin());
 }
 
 // fn umc__wprintw(win: RawWindow, s: str): int
 API_FN(wprintw)
 {
-    Umka *umka    = umkaGetInstance(result);
-    UmkaAPI *api  = umkaGetAPI(umka);
-    WINDOW *w     = GET_WINDOW(params, 0);
+    Umka *umka   = umkaGetInstance(result);
+    UmkaAPI *api = umkaGetAPI(umka);
+
+    WINDOW *w     = GET_WINDOW(api, params, 0);
     const char *s = api->umkaGetParam(params, 1)->ptrVal;
 
     api->umkaGetResult(params, result)->intVal = wprintw(w, "%s", s);
@@ -60,7 +61,7 @@ API_FN(mvwprintw)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *w     = GET_WINDOW(params, 0);
+    WINDOW *w     = GET_WINDOW(api, params, 0);
     int x         = api->umkaGetParam(params, 1)->intVal;
     int y         = api->umkaGetParam(params, 2)->intVal;
     const char *s = api->umkaGetParam(params, 3)->ptrVal;
@@ -73,7 +74,7 @@ API_FN(wrefresh)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(wrefresh(GET_WINDOW(params, 0)));
+    RET_CHECK_ERR(api, wrefresh(GET_WINDOW(api, params, 0)));
 }
 
 // fn umc__wgetch(win: RawWindow, c: ^char): bool
@@ -82,9 +83,9 @@ API_FN(wgetch)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *w = GET_WINDOW(params, 0);
+    WINDOW *w = GET_WINDOW(api, params, 0);
     int *c    = api->umkaGetParam(params, 1)->ptrVal;
-    RET_CHECK_ERR(*c = wgetch(w));
+    RET_CHECK_ERR(api, *c = wgetch(w));
 }
 
 // fn umc__raw(): bool
@@ -92,7 +93,7 @@ API_FN(raw)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(raw());
+    RET_CHECK_ERR(api, raw());
 }
 
 // fn umc__noraw(): bool
@@ -100,7 +101,7 @@ API_FN(noraw)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(noraw());
+    RET_CHECK_ERR(api, noraw());
 }
 
 // fn umc__cbreak(): bool
@@ -108,7 +109,7 @@ API_FN(cbreak)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(cbreak());
+    RET_CHECK_ERR(api, cbreak());
 }
 
 // fn umc__nocbreak(): bool
@@ -116,7 +117,7 @@ API_FN(nocbreak)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(nocbreak());
+    RET_CHECK_ERR(api, nocbreak());
 }
 
 // fn umc__echo(): bool
@@ -124,7 +125,7 @@ API_FN(echo)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(echo());
+    RET_CHECK_ERR(api, echo());
 }
 
 // fn umc__noecho(): bool
@@ -132,7 +133,7 @@ API_FN(noecho)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(noecho());
+    RET_CHECK_ERR(api, noecho());
 }
 
 // fn umc__keypad(win: RawWindow, enable: bool): bool
@@ -141,9 +142,9 @@ API_FN(keypad)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *w   = GET_WINDOW(params, 0);
+    WINDOW *w   = GET_WINDOW(api, params, 0);
     bool enable = api->umkaGetParam(params, 1)->uintVal;
-    RET_CHECK_ERR(keypad(w, enable));
+    RET_CHECK_ERR(api, keypad(w, enable));
 }
 
 // fn umc__halfdelay(win: RawWindow, enable: bool): bool
@@ -151,7 +152,7 @@ API_FN(halfdelay)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(halfdelay(api->umkaGetParam(params, 0)->intVal));
+    RET_CHECK_ERR(api, halfdelay(api->umkaGetParam(params, 0)->intVal));
 }
 
 // fn umc__set_term(term: RawTerminal): RawTerminal
@@ -160,9 +161,9 @@ API_FN(set_term)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    SCREEN *new = GET_SCREEN(params, 0);
+    SCREEN *new = GET_SCREEN(api, params, 0);
 
-    RET_SCREEN(params, result) = set_term(new);
+    RET_SCREEN(api, params, result) = set_term(new);
 }
 
 // fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
@@ -175,7 +176,7 @@ API_FN(newterm)
     FILE *outf = api->umkaGetParam(params, 1)->ptrVal;
     FILE *inf  = api->umkaGetParam(params, 2)->ptrVal;
 
-    RET_SCREEN(params, result) = newterm(type, outf, inf);
+    RET_SCREEN(api, params, result) = newterm(type, outf, inf);
 }
 
 // fn umc__delscreen(term: RawTerminal)
@@ -183,7 +184,7 @@ API_FN(delscreen)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    delscreen(GET_SCREEN(params, 0));
+    delscreen(GET_SCREEN(api, params, 0));
 }
 
 // fn umc__fn_key_offset(key: int): int
@@ -271,9 +272,9 @@ API_FN(wattr_on)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *win = GET_WINDOW(params, 0);
+    WINDOW *win = GET_WINDOW(api, params, 0);
     attr_t attr = api->umkaGetParam(params, 1)->intVal;
-    RET_CHECK_ERR(wattr_on(win, attr, NULL));
+    RET_CHECK_ERR(api, wattr_on(win, attr, NULL));
 }
 
 // fn umc__wattr_off(win: RawWindow, a: RawAttribute): bool
@@ -282,10 +283,10 @@ API_FN(wattr_off)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *win = GET_WINDOW(params, 0);
+    WINDOW *win = GET_WINDOW(api, params, 0);
     int attr    = api->umkaGetParam(params, 1)->intVal;
 
-    RET_CHECK_ERR(wattr_off(win, attr, NULL));
+    RET_CHECK_ERR(api, wattr_off(win, attr, NULL));
 }
 
 // fn umc__clear(win: RawWindow): bool
@@ -293,7 +294,7 @@ API_FN(clear)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(wclear(GET_WINDOW(params, 0)));
+    RET_CHECK_ERR(api, wclear(GET_WINDOW(api, params, 0)));
 }
 
 // fn umc__erase(win: RawWindow): bool
@@ -301,7 +302,7 @@ API_FN(erase)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(werase(GET_WINDOW(params, 0)));
+    RET_CHECK_ERR(api, werase(GET_WINDOW(api, params, 0)));
 }
 
 // fn umc__getmaxxy(win: RawWindow, x, y: ^int)
@@ -310,7 +311,7 @@ API_FN(getmaxxy)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *w = GET_WINDOW(params, 0);
+    WINDOW *w = GET_WINDOW(api, params, 0);
     int *x    = api->umkaGetParam(params, 1)->ptrVal;
     int *y    = api->umkaGetParam(params, 2)->ptrVal;
     getmaxyx(w, *y, *x);
@@ -324,7 +325,7 @@ API_FN(curs_set)
 
     int *prev = api->umkaGetParam(params, 1)->ptrVal;
     int v     = api->umkaGetParam(params, 0)->intVal;
-    RET_CHECK_ERR(*prev = curs_set(v));
+    RET_CHECK_ERR(api, *prev = curs_set(v));
 }
 
 // fn umc__wattr_get(win: RawWindow, attr: ^RawAttribute, pair: ^ColorPairID): bool
@@ -333,10 +334,10 @@ API_FN(wattr_get)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *w = GET_WINDOW(params, 0);
+    WINDOW *w = GET_WINDOW(api, params, 0);
     attr_t *a = api->umkaGetParam(params, 1)->ptrVal;
     short *p  = api->umkaGetParam(params, 2)->ptrVal;
-    RET_CHECK_ERR(wattr_get(w, a, p, NULL)); // that one Cardi B song
+    RET_CHECK_ERR(api, wattr_get(w, a, p, NULL)); // that one Cardi B song
 }
 
 // fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: ColorPairID): bool
@@ -345,10 +346,10 @@ API_FN(wattr_set)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    WINDOW *w = GET_WINDOW(params, 0);
+    WINDOW *w = GET_WINDOW(api, params, 0);
     attr_t a  = api->umkaGetParam(params, 1)->uintVal;
     short p   = api->umkaGetParam(params, 2)->intVal;
-    RET_CHECK_ERR(wattr_set(w, a, p, NULL)); // again
+    RET_CHECK_ERR(api, wattr_set(w, a, p, NULL)); // again
 }
 
 // fn umc__has_colors_sp(term: RawTerminal): bool
@@ -357,7 +358,7 @@ API_FN(has_colors_sp)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    api->umkaGetResult(params, result)->intVal = has_colors_sp(GET_SCREEN(params, 0));
+    api->umkaGetResult(params, result)->intVal = has_colors_sp(GET_SCREEN(api, params, 0));
 }
 
 // fn umc__can_change_color_sp(term: RawTerminal): bool
@@ -366,7 +367,7 @@ API_FN(can_change_color_sp)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    api->umkaGetResult(params, result)->intVal = can_change_color_sp(GET_SCREEN(params, 0));
+    api->umkaGetResult(params, result)->intVal = can_change_color_sp(GET_SCREEN(api, params, 0));
 }
 
 // fn umc__start_color_sp(term: RawTerminal): bool
@@ -374,7 +375,7 @@ API_FN(start_color_sp)
 {
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
-    RET_CHECK_ERR(start_color_sp(GET_SCREEN(params, 0)));
+    RET_CHECK_ERR(api, start_color_sp(GET_SCREEN(api, params, 0)));
 }
 
 // fn umc__get_current_max_colors(): int
@@ -423,11 +424,11 @@ API_FN(init_pair_sp)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    SCREEN *s = GET_SCREEN(params, 0);
+    SCREEN *s = GET_SCREEN(api, params, 0);
     short p   = api->umkaGetParam(params, 1)->intVal;
     int bg    = api->umkaGetParam(params, 2)->intVal;
     int fg    = api->umkaGetParam(params, 3)->intVal;
-    RET_CHECK_ERR(init_pair_sp(s, p, fg, bg));
+    RET_CHECK_ERR(api, init_pair_sp(s, p, fg, bg));
 }
 
 // fn umc__init_color_sp(term: RawTerminal, color, r, g, b: int): bool
@@ -436,11 +437,11 @@ API_FN(init_color_sp)
     Umka *umka   = umkaGetInstance(result);
     UmkaAPI *api = umkaGetAPI(umka);
 
-    SCREEN *s = GET_SCREEN(params, 0);
+    SCREEN *s = GET_SCREEN(api, params, 0);
     short c   = api->umkaGetParam(params, 1)->intVal;
     short r   = api->umkaGetParam(params, 2)->intVal;
     short g   = api->umkaGetParam(params, 3)->intVal;
     short b   = api->umkaGetParam(params, 4)->intVal;
-    RET_CHECK_ERR(init_color_sp(s, c, r, g, b));
+    RET_CHECK_ERR(api, init_color_sp(s, c, r, g, b));
 }
 
