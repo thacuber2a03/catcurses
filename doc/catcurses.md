@@ -319,8 +319,8 @@ type Key* = enum {
 }
 ```
 
-The enum wrapping the value returned by getChar.
-If getChar returns an ASCII keypress, the value wrapped under this enum will be that key.
+The enum wrapping the value returned by getKey.
+If getKey returns an ASCII keypress, the value wrapped under this enum will be that key.
 
 > [!WARNING]
 > The function keys (F0..F64 and arrow keys, amongst others)
