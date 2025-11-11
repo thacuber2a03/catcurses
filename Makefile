@@ -20,7 +20,7 @@ TARGETS=$(NAME)_linux.umi
 all: build doc/$(NAME).md
 
 %_linux.umi: %.c Makefile
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) $< -o $@
+	$(CC) -shared $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 build: $(TARGETS)
 
