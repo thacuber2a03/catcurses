@@ -43,25 +43,14 @@ API_FN(endwin)
     RET_CHECK_ERR(endwin());
 }
 
-// fn umc__waddstr(win: RawWindow, s: str): bool
-API_FN(waddstr)
+// fn umc__waddnstr(win: RawWindow, s: str, n: int): bool
+API_FN(waddnstr)
 {
     API_HEADER;
     WINDOW *win = GET_WINDOW(0);
     char *s     = api->umkaGetParam(params, 1)->ptrVal;
-    RET_CHECK_ERR(waddstr(win, s));
-}
-
-// fn umc__mvwaddstr(win: RawWindow, x, y: int, s: str): bool
-API_FN(mvwaddstr)
-{
-    API_HEADER;
-
-    WINDOW *win = GET_WINDOW(0);
-    int x       = api->umkaGetParam(params, 1)->intVal;
-    int y       = api->umkaGetParam(params, 2)->intVal;
-    char *s     = api->umkaGetParam(params, 3)->ptrVal;
-    RET_CHECK_ERR(mvwaddstr(win, y, x, s));
+    int n       = api->umkaGetParam(params, 2)->intVal;
+    RET_CHECK_ERR(waddnstr(win, s, n));
 }
 
 // fn umc__wrefresh(win: RawWindow): bool
@@ -191,10 +180,7 @@ API_FN(fnKeyOffset)
 // must match the order of all keys listed
 // after the one otherKeyStart refers to in catcurses.um
 static int keys[] = {
-    KEY_DOWN,
-    KEY_UP,
-    KEY_LEFT,
-    KEY_RIGHT,
+    KEY_DOWN, KEY_UP, KEY_LEFT, KEY_RIGHT, KEY_PPAGE, KEY_NPAGE, KEY_HOME, KEY_END, KEY_DC,
 };
 
 static int keysLen = ARRLEN(keys);
@@ -451,4 +437,12 @@ API_FN(nodelay)
     WINDOW *win = GET_WINDOW(0);
     bool bf     = api->umkaGetParam(params, 1)->intVal;
     RET_CHECK_ERR(nodelay(win, bf));
+}
+
+// fn umc__wclrtoeol(win: RawWindow): bool
+API_FN(wclrtoeol)
+{
+    API_HEADER;
+    WINDOW *win = GET_WINDOW(0);
+    RET_CHECK_ERR(wclrtoeol(win));
 }

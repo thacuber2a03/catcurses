@@ -448,6 +448,10 @@ type Key* = enum {
 	// Arrow keys
 	down; up; left; right
 
+	pageUp; pageDown
+	home; end
+	delete
+
 	// No key was pressed; applicable when
 	// `timeout` or `noDelay` have been set
 	// (technical detail: returned when errno = EAGAIN)
@@ -480,6 +484,10 @@ fn (k: ^Key) string*(): str {
 			.f57: "f57", .f58: "f58", .f59: "f59", .f60: "f60", .f61: "f61", .f62: "f62", .f63: "f63", .f64: "f64",
 
 			.down: "down", .up: "up", .left: "left", .right: "right",
+
+			.pageUp: "pageUp", .pageDown: "pageDown",
+			.home: "home", .end: "end",
+			.none: "none",
 		}
 	}
 
@@ -546,52 +554,60 @@ fn umc__wtimeout(win: RawWindow, delay: int)
 
 fn (w: ^Window) timeout*(n: int) { umc__wtimeout(w._, n) }
 
-fn umc__waddstr(win: RawWindow, s: str): bool
-fn umc__mvwaddstr(win: RawWindow, x, y: int, s: str): bool
+//~~fn (^Window) setCursorPos
+// Moves the cursor to (`x`,`y`), relative to this window.
+// Reports whether it was able to do so.
+fn (w: ^Window) setCursorPos*(x, y: int): bool
+//~~
+
+fn umc__wmove(win: RawWindow, x, y: int): bool
+
+fn (w: ^Window) setCursorPos*(x, y: int): bool { return umc__wmove(w._, x, y) }
+
+fn umc__waddnstr(win: RawWindow, s: str, n: int): bool
+
+//~~fn (^Window) writeString
+// Writes `n` bytes of `s` in the current position of the cursor.
+// If `n` == `-1`, writes the whole string. (default behavior)
+// Reports whether it could be written.
+// Fails if `n` != `-1` and `n` > `len(s)`.
+fn (w: ^Window) writeString*(s: str, n: int = -1): bool
+//~~
+
+fn (w: ^Window) writeString*(s: str, n: int = -1): bool {
+	if n != -1 && n > len(s) { return false }
+	return umc__waddnstr(w._, s, n) 
+}
+
+//~~fn (^Window) writeStringAt
+// Analogous to `fn (^Window) writeString`, but moves the cursor to (`x`,`y`).
+fn (w: ^Window) writeStringAt*(x, y: int, s: str, n: int = -1): bool
+//~~
+
+fn (w: ^Window) writeStringAt*(x, y: int, s: str, n: int = -1): bool {
+	if !w.setCursorPos(x, y) { return false }
+	return w.writeString(s, n)
+}
 
 //~~fn (^Window) print
 // Prints a formatted string in the current position of the cursor.
-// Returns how many characters were written.
+// Reports whether it could be written.
 // 
 // The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
-fn (w: ^Window) print*(fmt: str, a: ..any): int
+fn (w: ^Window) print*(fmt: str, a: ..any): bool
 //~~
 
-fn (w: ^Window) print*(fmt: str, a: ..any): int {
-	s := fmt::vsfmt(fmt, a)
-	if !umc__waddstr(w._, s) { return 0 }
-	return len(s)
-}
+fn (w: ^Window) print*(fmt: str, a: ..any): bool { return w.writeString(fmt::vsfmt(fmt, a)) }
 
 //~~fn (^Window) printAt
 // Moves the cursor to (`x`,`y`) and prints a formatted string there.
-// Returns how many characters were written.
+// Reports whether it could be written.
 //
 // The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
-fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
+fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): bool
 //~~
 
-fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int {
-	s := fmt::vsfmt(fmt, a)
-	if !umc__mvwaddstr(w._, x, y, s) { return 0 }
-	return len(s)
-}
-
-//~~fn (^Window) writeString
-// Writes a raw string in the current position of the cursor.
-// Reports whether it could be written.
-fn (w: ^Window) writeString*(s: str): bool
-//~~
-
-fn (w: ^Window) writeString*(s: str): bool { return umc__waddstr(w._, s) }
-
-//~~fn (^Window) writeStringAt
-// Moves the cursor to (`x`,`y`) and writes a raw string there.
-// Reports whether it could be written.
-fn (w: ^Window) writeStringAt*(x, y: int, s: str): bool
-//~~
-
-fn (w: ^Window) writeStringAt*(x, y: int, s: str): bool { return umc__mvwaddstr(w._, x, y, s) }
+fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): bool { return w.writeStringAt(x, y, fmt::vsfmt(fmt, a)) }
 
 //~~fn (^Window) getKey
 // Returns the current keystroke, if any.
@@ -851,16 +867,6 @@ fn (w: ^Window) getWidth*(): int { return w.getSize().item0 }
 fn (w: ^Window) getHeight*(): int { return w.getSize().item1 }
 //~~
 
-//~~fn (^Window) setCursorPos
-// Moves the cursor to (`x`,`y`), relative to this window.
-// Reports whether it was able to do so.
-fn (w: ^Window) setCursorPos*(x, y: int): bool
-//~~
-
-fn umc__wmove(win: RawWindow, x, y: int): bool
-
-fn (w: ^Window) setCursorPos*(x, y: int): bool { return umc__wmove(w._, x, y) }
-
 //~~fn (^Window) getCursorPos
 // Returns the position of the cursor relative to this window, in (`x`, `y`) order.
 fn (w: ^Window) getCursorPos*(): (int, int)
@@ -902,3 +908,13 @@ fn (win: ^Window) moveAndClampCursor*(dx, dy: int): (int, int) {
 	win.setCursorPos(nx, ny)
 	return nx, ny
 }
+
+//~~fn (^Window) clearToEOL
+// Clears the contents from the cursor's location to the end of the line.
+// Reports whether it managed to do so.
+fn (w: ^Window) clearToEOL*(): bool
+//~~
+
+fn umc__wclrtoeol(win: RawWindow): bool
+
+fn (w: ^Window) clearToEOL*(): bool { return umc__wclrtoeol(w._) }
