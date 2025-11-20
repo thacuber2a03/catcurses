@@ -618,3 +618,41 @@ fn (w: ^Window) getSize*(): (int, int)
 Returns the x and y sizes of the window, in that order.
 
 
+## [fn (^Window) setCursorPos](../catcurses.um#L810)
+
+```go
+fn (w: ^Window) setCursorPos*(x, y: int): bool
+```
+
+Moves the cursor to (`x`,`y`), relative to this window.
+Reports whether it was able to do so.
+
+
+## [fn (^Window) getCursorPos](../catcurses.um#L819)
+
+```go
+fn (w: ^Window) getCursorPos*(): (int, int)
+```
+
+Returns the position of the cursor relative to this window, in (`x`, `y`) order.
+
+
+## [fn (^Window) moveCursor](../catcurses.um#L832)
+
+```go
+fn (w: ^Window) moveCursor*(dx, dy: int): bool
+```
+
+Moves the cursor by (`dx`,`dy`). Reports whether it was able to do so.
+
+
+## [fn (^Window) moveAndClampCursor](../catcurses.um#L843)
+
+```go
+fn (win: ^Window) moveAndClampCursor*(dx, dy: int): (int, int)
+```
+
+Moves the cursor by (`dx`,`dy`). Clamps the resulting position to the window's bounds.
+Returns the actual position it reached, in (`x`,`y`) order as well.
+
+

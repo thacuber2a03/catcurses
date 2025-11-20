@@ -803,3 +803,55 @@ fn (w: ^Window) getSize*(): (int, int) {
 	umc__getmaxxy(w._, &x, &y)
 	return x, y
 }
+
+//~~fn (^Window) setCursorPos
+// Moves the cursor to (`x`,`y`), relative to this window.
+// Reports whether it was able to do so.
+fn (w: ^Window) setCursorPos*(x, y: int): bool
+//~~
+
+fn umc__wmove(win: RawWindow, x, y: int): bool
+
+fn (w: ^Window) setCursorPos*(x, y: int): bool { return umc__wmove(w._, x, y) }
+
+//~~fn (^Window) getCursorPos
+// Returns the position of the cursor relative to this window, in (`x`, `y`) order.
+fn (w: ^Window) getCursorPos*(): (int, int)
+//~~
+
+fn umc__getxy(win: RawWindow, x, y: ^int)
+
+fn (w: ^Window) getCursorPos*(): (int, int) {
+	var x, y: int
+	umc__getxy(w._, &x, &y)
+	return x, y
+}
+
+//~~fn (^Window) moveCursor
+// Moves the cursor by (`dx`,`dy`). Reports whether it was able to do so.
+fn (w: ^Window) moveCursor*(dx, dy: int): bool
+//~~
+
+fn (w: ^Window) moveCursor*(dx, dy: int): bool {
+	x, y := w.getCursorPos()
+	return w.setCursorPos(x+dx, y+dy)
+}
+
+//~~fn (^Window) moveAndClampCursor
+// Moves the cursor by (`dx`,`dy`). Clamps the resulting position to the window's bounds.
+// Returns the actual position it reached, in (`x`,`y`) order as well.
+fn (win: ^Window) moveAndClampCursor*(dx, dy: int): (int, int)
+//~~
+
+fn (win: ^Window) moveAndClampCursor*(dx, dy: int): (int, int) {
+	x, y := win.getCursorPos()
+	w, h := win.getSize()
+
+	nx, ny := x+dx, y+dy
+
+	if nx < 0 { nx = 0 }; if nx >= w { nx = w - 1 }
+	if ny < 0 { ny = 0 }; if ny >= h { ny = h - 1 }
+
+	win.setCursorPos(nx, ny)
+	return nx, ny
+}

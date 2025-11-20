@@ -295,6 +295,26 @@ API_FN(getmaxxy)
     getmaxyx(w, *y, *x);
 }
 
+// fn umc__getxy(win: RawWindow, x, y: ^int)
+API_FN(getxy)
+{
+    API_HEADER;
+    WINDOW *w = GET_WINDOW(0);
+    int *x    = api->umkaGetParam(params, 1)->ptrVal;
+    int *y    = api->umkaGetParam(params, 2)->ptrVal;
+    getyx(w, *y, *x);
+}
+
+// fn umc__wmove(win: RawWindow, x, y: int): bool
+API_FN(wmove)
+{
+    API_HEADER;
+    WINDOW *w = GET_WINDOW(0);
+    int x     = api->umkaGetParam(params, 1)->intVal;
+    int y     = api->umkaGetParam(params, 2)->intVal;
+    RET_CHECK_ERR(wmove(w, y, x));
+}
+
 // fn umc__curs_set(v: Visibility, prev: ^Visibility): bool
 API_FN(curs_set)
 {
