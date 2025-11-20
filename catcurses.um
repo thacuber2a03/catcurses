@@ -372,7 +372,7 @@ fn (t: ^Terminal) echo*(b: bool): bool {
 // Controls translation of the return key into NL (10, 0x0a, '\n').
 // This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nonl`).
 // Must only be called on the standard terminal (see `fn stdTerminal`).
-// Reports whether the echo was able to be set/unset.
+// Reports whether the translation was able to be enabled/disabled.
 fn (t: ^Terminal) nl*(b: bool): bool
 //~~
 
@@ -439,7 +439,7 @@ fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //~~type Key
-// The enum wrapping the value returned by getKey.
+// The enum wrapping the value returned by `fn (^Window) getKey`.
 // If getKey returns an ASCII keypress, the value wrapped under this enum will be that key.
 //
 // > [!WARNING]
@@ -548,6 +548,16 @@ fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
 
 fn umc__mvwprintw(win: RawWindow, x, y: int, s: str): int
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int { return umc__mvwprintw(w._, x, y, fmt::vsfmt(fmt,  a)) }
+
+//~~fn (^Window) noDelay
+// Disables delay entirely (makes `fn (^Window) getKey` and related non-blocking).
+// Reports whether the operation succeeded.
+fn (w: ^Window) noDelay*(b: bool): bool
+//~~
+
+fn umc__nodelay(win: RawWindow, bf: bool): bool
+
+fn (w: ^Window) noDelay*(b: bool): bool { return umc__nodelay(w._, b) }
 
 //~~fn (^Window) getKey
 // Returns the current keystroke, if any.
