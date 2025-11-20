@@ -370,7 +370,7 @@ fn (t: ^Terminal) echo*(b: bool): bool {
 
 //~~fn (^Terminal) nl
 // Controls translation of the return key into NL (10, 0x0a, '\n').
-// This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nonl`).
+// This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nl`).
 // Must only be called on the standard terminal (see `fn stdTerminal`).
 // Reports whether the translation was able to be enabled/disabled.
 fn (t: ^Terminal) nl*(b: bool): bool
@@ -792,7 +792,7 @@ fn umc__erase(win: RawWindow): bool
 fn (w: ^Window) erase*(): bool { return umc__erase(w._) }
 
 //~~fn (^Window) getSize
-// Returns the x and y sizes of the window, in that order.
+// Returns the width and height of the window, in that order.
 fn (w: ^Window) getSize*(): (int, int)
 //~~
 
@@ -803,6 +803,19 @@ fn (w: ^Window) getSize*(): (int, int) {
 	umc__getmaxxy(w._, &x, &y)
 	return x, y
 }
+
+//~~fn (^Window) getWidth
+// Returns the width of the window.
+// Shorthand for `w.getSize().item0`.
+fn (w: ^Window) getWidth*(): int { return w.getSize().item0 }
+//~~
+
+
+//~~fn (^Window) getHeight
+// Returns the height of the window.
+// Shorthand for `w.getSize().item1`.
+fn (w: ^Window) getHeight*(): int { return w.getSize().item1 }
+//~~
 
 //~~fn (^Window) setCursorPos
 // Moves the cursor to (`x`,`y`), relative to this window.

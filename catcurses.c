@@ -6,13 +6,6 @@
 
 #include <umka_api.h>
 
-#define RET_CHECK_ERR(e) (api->umkaGetResult(params, result)->uintVal = (e) != ERR)
-
-#define GET_WINDOW(i) ((WINDOW *)api->umkaGetParam(params, i)->ptrVal)
-#define GET_SCREEN(i) ((SCREEN *)api->umkaGetParam(params, i)->ptrVal)
-#define RET_WINDOW()  (*(WINDOW **)api->umkaGetResult(params, result))
-#define RET_SCREEN()  (*(SCREEN **)api->umkaGetResult(params, result))
-
 #define ARRLEN(a) (sizeof(a) / sizeof((a)[0]))
 #define UNUSED(x) ((void)(x))
 
@@ -21,6 +14,13 @@
 #define API_HEADER                          \
     Umka *umka   = umkaGetInstance(result); \
     UmkaAPI *api = umkaGetAPI(umka)
+
+#define RET_CHECK_ERR(e) (api->umkaGetResult(params, result)->uintVal = (e) != ERR)
+
+#define GET_WINDOW(i) ((WINDOW *)api->umkaGetParam(params, i)->ptrVal)
+#define GET_SCREEN(i) ((SCREEN *)api->umkaGetParam(params, i)->ptrVal)
+#define RET_WINDOW()  (*(WINDOW **)api->umkaGetResult(params, result))
+#define RET_SCREEN()  (*(SCREEN **)api->umkaGetResult(params, result))
 
 // fn umc__initscr(): RawWindow
 API_FN(initscr)
@@ -123,18 +123,18 @@ API_FN(noecho)
     RET_CHECK_ERR(noecho());
 }
 
-// fn umc__nonl(): bool
-API_FN(nonl)
-{
-    API_HEADER;
-    RET_CHECK_ERR(nonl());
-}
-
 // fn umc__nl(): bool
 API_FN(nl)
 {
     API_HEADER;
     RET_CHECK_ERR(nl());
+}
+
+// fn umc__nonl(): bool
+API_FN(nonl)
+{
+    API_HEADER;
+    RET_CHECK_ERR(nonl());
 }
 
 // fn umc__keypad(win: RawWindow, enable: bool): bool

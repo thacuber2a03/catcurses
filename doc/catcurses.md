@@ -263,7 +263,7 @@ fn (t: ^Terminal) nl*(b: bool): bool
 ```
 
 Controls translation of the return key into NL (10, 0x0a, '\n').
-This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nonl`).
+This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nl`).
 Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the translation was able to be enabled/disabled.
 
@@ -615,10 +615,30 @@ Fills this window with blank characters.
 fn (w: ^Window) getSize*(): (int, int)
 ```
 
-Returns the x and y sizes of the window, in that order.
+Returns the width and height of the window, in that order.
 
 
-## [fn (^Window) setCursorPos](../catcurses.um#L810)
+## [fn (^Window) getWidth](../catcurses.um#L810)
+
+```go
+fn (w: ^Window) getWidth*(): int { return w.getSize().item0 }
+```
+
+Returns the width of the window.
+Shorthand for `w.getSize().item0`.
+
+
+## [fn (^Window) getHeight](../catcurses.um#L817)
+
+```go
+fn (w: ^Window) getHeight*(): int { return w.getSize().item1 }
+```
+
+Returns the height of the window.
+Shorthand for `w.getSize().item1`.
+
+
+## [fn (^Window) setCursorPos](../catcurses.um#L823)
 
 ```go
 fn (w: ^Window) setCursorPos*(x, y: int): bool
@@ -628,7 +648,7 @@ Moves the cursor to (`x`,`y`), relative to this window.
 Reports whether it was able to do so.
 
 
-## [fn (^Window) getCursorPos](../catcurses.um#L819)
+## [fn (^Window) getCursorPos](../catcurses.um#L832)
 
 ```go
 fn (w: ^Window) getCursorPos*(): (int, int)
@@ -637,7 +657,7 @@ fn (w: ^Window) getCursorPos*(): (int, int)
 Returns the position of the cursor relative to this window, in (`x`, `y`) order.
 
 
-## [fn (^Window) moveCursor](../catcurses.um#L832)
+## [fn (^Window) moveCursor](../catcurses.um#L845)
 
 ```go
 fn (w: ^Window) moveCursor*(dx, dy: int): bool
@@ -646,7 +666,7 @@ fn (w: ^Window) moveCursor*(dx, dy: int): bool
 Moves the cursor by (`dx`,`dy`). Reports whether it was able to do so.
 
 
-## [fn (^Window) moveAndClampCursor](../catcurses.um#L843)
+## [fn (^Window) moveAndClampCursor](../catcurses.um#L856)
 
 ```go
 fn (win: ^Window) moveAndClampCursor*(dx, dy: int): (int, int)
