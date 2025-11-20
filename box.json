@@ -16,9 +16,11 @@
         "catcurses_linux.so"
     ],
     "pre_build": {
-        "posix": "make"
+        "posix": "make",
+        "windows": "echo 'This project cannot be built on Windows.' & exit 255"
     },
     "run": {
-        "posix": "make run"
+        "posix": "make run",
+        "windows": "echo 'This project cannot be run on Windows.' & exit 255"
     }
 }
