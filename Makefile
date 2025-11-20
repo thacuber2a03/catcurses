@@ -1,15 +1,11 @@
+.POSIX:
+
+CC := cc
+
 NAME := catcurses
 UMKA ?= umbox/umka/umka
 
-CFLAGS := \
-	-Wall        \
-	-Wextra      \
-	-Werror      \
-	-pedantic    \
-	-std=c11     \
-	-Iumbox/umka \
-	-fPIC        \
-	-g
+CFLAGS := -Wall -Wextra -Werror -pedantic -std=c11 -Iumbox/umka -fPIC -g
 
 LDFLAGS := -lncurses
 
@@ -24,8 +20,9 @@ all: build doc/$(NAME).md
 
 build: $(TARGETS)
 
+FILE ?= examples/hello.um
 run: build doc/$(NAME).md
-	$(UMKA) examples/hello.um
+	$(UMKA) $(FILE)
 
 mmdoc:
 	mkdir -p doc
