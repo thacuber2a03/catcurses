@@ -440,7 +440,7 @@ fn (w: ^Window) writeString*(s: str, n: int = -1): bool
 Writes `n` bytes of `s` in the current position of the cursor.
 If `n` == `-1`, writes the whole string. (default behavior)
 Reports whether it could be written.
-Fails if `n` != `-1` and `n` >= `len(s)`.
+Fails if `n` != `-1` and `n` > `len(s)`.
 
 
 ## [fn (^Window) writeStringAt](../catcurses.um#L584)
