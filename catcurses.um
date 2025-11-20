@@ -25,7 +25,7 @@ type (
 		window: Window
 
 		// The maximum amount of colors supported in this terminal.
-		// Set on creation (see `fn newTerminal`).
+		// Set on creation (see `fn mkTerminal`).
 		maxColors: int
 
 		// The amount of color pairs currently allocated.
@@ -360,6 +360,23 @@ fn (t: ^Terminal) echo*(b: bool): bool {
 	return umc__noecho()
 }
 
+//~~fn (^Terminal) nl
+// Controls translation of the return key into NL (10, 0x0a, '\n').
+// This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nonl`).
+// Must only be called on the standard terminal (see `fn stdTerminal`).
+// Reports whether the echo was able to be set/unset.
+fn (t: ^Terminal) nl*(b: bool): bool
+//~~
+
+fn umc__nl(): bool
+fn umc__nonl(): bool
+
+fn (t: ^Terminal) nl*(b: bool): bool {
+	assertStdTerm(t, "nl")
+	if b { return umc__nl() }
+	return umc__nonl()
+}
+
 //~~fn (^Terminal) halfDelay
 // Sets the terminal's half-delay, in tenths of a second.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
@@ -476,6 +493,11 @@ const otherKeyStart = int(Key.down)
 //~~fn keyF
 // Similar to ncurses' `KEY_F(n)` macro.
 fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
+//~~
+
+//~~fn ctrlKey
+// Returns the CTRL representation of `k`.
+fn ctrlKey*(k: Key): Key { return Key(int(k) & 0x1f) }
 //~~
 
 //~~fn (^Window) keypad

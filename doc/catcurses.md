@@ -12,7 +12,7 @@ type (
 		window: Window
 
 		// The maximum amount of colors supported in this terminal.
-		// Set on creation (see `fn newTerminal`).
+		// Set on creation (see `fn mkTerminal`).
 		maxColors: int
 
 		// The amount of color pairs currently allocated.
@@ -256,7 +256,19 @@ Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the echo was able to be set/unset.
 
 
-## [fn (^Terminal) halfDelay](../catcurses.um#L367)
+## [fn (^Terminal) nl](../catcurses.um#L368)
+
+```go
+fn (t: ^Terminal) nl*(b: bool): bool
+```
+
+Controls translation of the return key into NL (10, 0x0a, '\n').
+This allows for detecting whether the return key was pressed, amongst other benefits (see `man 3x nonl`).
+Must only be called on the standard terminal (see `fn stdTerminal`).
+Reports whether the echo was able to be set/unset.
+
+
+## [fn (^Terminal) halfDelay](../catcurses.um#L384)
 
 ```go
 fn (t: ^Terminal) halfDelay*(n: int): bool
@@ -267,7 +279,7 @@ Must only be called on the standard terminal (see `fn stdTerminal`).
 Reports whether the half delay was able to be changed.
 
 
-## [type Visibility](../catcurses.um#L379)
+## [type Visibility](../catcurses.um#L396)
 
 ```go
 type Visibility* = enum { hidden; visible; veryVisible }
@@ -276,7 +288,7 @@ type Visibility* = enum { hidden; visible; veryVisible }
 Cursor visibility specifiers. See `fn (^Terminal) cursorVisibility`.
 
 
-## [fn (^Visibility) string](../catcurses.um#L385)
+## [fn (^Visibility) string](../catcurses.um#L402)
 
 ```go
 fn (v: ^Visibility) string*(): str
@@ -286,7 +298,7 @@ Returns the string representation of this visibility specifier.
 For debugging purposes.
 
 
-## [fn (^Terminal) cursorVisibility](../catcurses.um#L402)
+## [fn (^Terminal) cursorVisibility](../catcurses.um#L419)
 
 ```go
 fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool)
@@ -297,7 +309,7 @@ Must only be called on the standard terminal (see `fn stdTerminal`).
 Returns the previous visibility and whether it was able to change it at all.
 
 
-## [type Key](../catcurses.um#L423)
+## [type Key](../catcurses.um#L440)
 
 ```go
 type Key* = enum {
@@ -327,7 +339,7 @@ If getKey returns an ASCII keypress, the value wrapped under this enum will be t
 > *do not match* the values used by ncurses, and don't currently intend to do so.
 
 
-## [fn (^Key) string](../catcurses.um#L445)
+## [fn (^Key) string](../catcurses.um#L462)
 
 ```go
 fn (k: ^Key) string*(): str
@@ -337,7 +349,7 @@ Returns the string representation of this key.
 For debugging purposes.
 
 
-## [fn keyF](../catcurses.um#L478)
+## [fn keyF](../catcurses.um#L495)
 
 ```go
 fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
@@ -346,7 +358,16 @@ fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
 Similar to ncurses' `KEY_F(n)` macro.
 
 
-## [fn (^Window) keypad](../catcurses.um#L484)
+## [fn ctrlKey](../catcurses.um#L500)
+
+```go
+fn ctrlKey*(k: Key): Key { return Key(int(k) & 0x1f) }
+```
+
+Returns the CTRL representation of `k`.
+
+
+## [fn (^Window) keypad](../catcurses.um#L506)
 
 ```go
 fn (w: ^Window) keypad*(enable: bool): bool
@@ -356,7 +377,7 @@ Attempts to enable/disable function key detection in `w`.
 Reports whether it was able to do so.
 
 
-## [fn (^Window) print](../catcurses.um#L495)
+## [fn (^Window) print](../catcurses.um#L517)
 
 ```go
 fn (w: ^Window) print*(fmt: str, a: ..any): int
@@ -368,7 +389,7 @@ Returns how many characters were written.
 The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 
 
-## [fn (^Window) printAt](../catcurses.um#L506)
+## [fn (^Window) printAt](../catcurses.um#L528)
 
 ```go
 fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
@@ -380,7 +401,7 @@ Returns how many characters were written.
 The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
 
 
-## [fn (^Window) getKey](../catcurses.um#L515)
+## [fn (^Window) getKey](../catcurses.um#L537)
 
 ```go
 fn (w: ^Window) getKey*(): (Key, bool)
@@ -390,7 +411,7 @@ Returns the current keystroke, if any.
 Return values depend on the standard terminal's settings; check `man 3x getch` for information.
 
 
-## [fn (^Window) refresh](../catcurses.um#L539)
+## [fn (^Window) refresh](../catcurses.um#L561)
 
 ```go
 fn (w: ^Window) refresh*(): bool
@@ -399,7 +420,7 @@ fn (w: ^Window) refresh*(): bool
 Redraws this window, if applicable.
 
 
-## [type Attribute](../catcurses.um#L547)
+## [type Attribute](../catcurses.um#L569)
 
 ```go
 type Attribute* = enum {
@@ -420,7 +441,7 @@ type Attribute* = enum {
 Color-independent character attributes.
 
 
-## [fn (^Attribute) string](../catcurses.um#L567)
+## [fn (^Attribute) string](../catcurses.um#L589)
 
 ```go
 fn (a: ^Attribute) string*(): str
@@ -430,7 +451,7 @@ Returns the string representation of this character attribute.
 For debugging purposes.
 
 
-## [fn (^Window) attrOn](../catcurses.um#L601)
+## [fn (^Window) attrOn](../catcurses.um#L623)
 
 ```go
 fn (w: ^Window) attrOn*(attrs: ..Attribute): (bool, Attribute)
@@ -440,7 +461,7 @@ Enables all the attributes listed in `attrs` (see `type Attribute`).
 Reports whether any of the attributes could not be enabled, and which one.
 
 
-## [fn (^Window) attrOff](../catcurses.um#L607)
+## [fn (^Window) attrOff](../catcurses.um#L629)
 
 ```go
 fn (w: ^Window) attrOff*(attrs: ..Attribute): (bool, Attribute)
@@ -450,7 +471,7 @@ Disables all the attributes listed in `attrs` (see `type Attribute`).
 Reports whether any of the attributes could not be disabled, and which one.
 
 
-## [fn (^Window) attrListOn](../catcurses.um#L612)
+## [fn (^Window) attrListOn](../catcurses.um#L634)
 
 ```go
 fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
@@ -459,7 +480,7 @@ fn (w: ^Window) attrListOn*(attrs: []Attribute): (bool, Attribute)
 Alternate version of `fn (^Window) attrOn` that explicitly takes a list.
 
 
-## [fn (^Window) attrListOff](../catcurses.um#L617)
+## [fn (^Window) attrListOff](../catcurses.um#L639)
 
 ```go
 fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
@@ -468,7 +489,7 @@ fn (w: ^Window) attrListOff*(attrs: []Attribute): (bool, Attribute)
 Alternate version of `fn (^Window) attrOff` that explicitly takes a list.
 
 
-## [fn (^Window) getAttributes](../catcurses.um#L636)
+## [fn (^Window) getAttributes](../catcurses.um#L658)
 
 ```go
 fn (w: ^Window) getAttributes*(): (^map[Attribute]bool, ColorPairID)
@@ -478,7 +499,7 @@ Returns the set of attributes and color pair currently applied to this window.
 Returns `null` for the attributes map on error.
 
 
-## [fn (^Window) setAttributes](../catcurses.um#L641)
+## [fn (^Window) setAttributes](../catcurses.um#L663)
 
 ```go
 fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: ColorPairID): bool
@@ -487,7 +508,7 @@ fn (w: ^Window) setAttributes*(attrs: map[Attribute]bool, pair: ColorPairID): bo
 Overwrites the set attributes and color pair currently set for this window.
 
 
-## [fn (^Window) useColorPair](../catcurses.um#L669)
+## [fn (^Window) useColorPair](../catcurses.um#L691)
 
 ```go
 fn (w: ^Window) useColorPair*(pair: ColorPairID): bool
@@ -497,7 +518,7 @@ Sets `pair` as the current color pair for this window's text output.
 Reports whether it could not be set.
 
 
-## [fn (^Window) detachColorPair](../catcurses.um#L675)
+## [fn (^Window) detachColorPair](../catcurses.um#L697)
 
 ```go
 fn (w: ^Window) detachColorPair*(pair: ColorPairID): bool
@@ -507,7 +528,7 @@ Stops using `pair` as the current color pair for this window's text output.
 Reports whether it could not be disabled.
 
 
-## [type WithFn](../catcurses.um#L683)
+## [type WithFn](../catcurses.um#L705)
 
 ```go
 type WithFn* = fn(win: ^Window)
@@ -516,7 +537,7 @@ type WithFn* = fn(win: ^Window)
 Function type taken as argument by all `fn (^Window) with*` functions.
 
 
-## [fn (^Window) withAttrs](../catcurses.um#L688)
+## [fn (^Window) withAttrs](../catcurses.um#L710)
 
 ```go
 fn (w: ^Window) withAttrs*(attrs: []Attribute, f: WithFn)
@@ -525,7 +546,7 @@ fn (w: ^Window) withAttrs*(attrs: []Attribute, f: WithFn)
 Runs `f` with all attributes in `attrs` enabled, and disables them when the function ends.
 
 
-## [fn (^Window) withColorPair](../catcurses.um#L701)
+## [fn (^Window) withColorPair](../catcurses.um#L723)
 
 ```go
 fn (w: ^Window) withColorPair*(pair: ColorPairID, f: WithFn)
@@ -534,7 +555,7 @@ fn (w: ^Window) withColorPair*(pair: ColorPairID, f: WithFn)
 Runs `f` with `pair` set as the current color pair, and unsets it when the function ends.
 
 
-## [fn (^Window) withAttrsAndColorPair](../catcurses.um#L717)
+## [fn (^Window) withAttrsAndColorPair](../catcurses.um#L739)
 
 ```go
 fn (w: ^Window) withAttrsAndColorPair*(attrs: []Attribute, pair: ColorPairID, f: WithFn)
@@ -546,7 +567,7 @@ win.withAttrs(attrs, { win.withColorPair(pair, f) })
 ```
 
 
-## [fn (^Window) clear](../catcurses.um#L726)
+## [fn (^Window) clear](../catcurses.um#L748)
 
 ```go
 fn (w: ^Window) clear*(): bool
@@ -555,7 +576,7 @@ fn (w: ^Window) clear*(): bool
 Clears this window.
 
 
-## [fn (^Window) erase](../catcurses.um#L734)
+## [fn (^Window) erase](../catcurses.um#L756)
 
 ```go
 fn (w: ^Window) erase*(): bool
@@ -564,7 +585,7 @@ fn (w: ^Window) erase*(): bool
 Fills this window with blank characters.
 
 
-## [fn (^Window) getSize](../catcurses.um#L742)
+## [fn (^Window) getSize](../catcurses.um#L764)
 
 ```go
 fn (w: ^Window) getSize*(): (int, int)

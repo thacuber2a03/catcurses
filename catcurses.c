@@ -136,6 +136,22 @@ API_FN(noecho)
     RET_CHECK_ERR(api, noecho());
 }
 
+// fn umc__nonl(): bool
+API_FN(nonl)
+{
+    Umka *umka   = umkaGetInstance(result);
+    UmkaAPI *api = umkaGetAPI(umka);
+    RET_CHECK_ERR(api, nonl());
+}
+
+// fn umc__nl(): bool
+API_FN(nl)
+{
+    Umka *umka   = umkaGetInstance(result);
+    UmkaAPI *api = umkaGetAPI(umka);
+    RET_CHECK_ERR(api, nl());
+}
+
 // fn umc__keypad(win: RawWindow, enable: bool): bool
 API_FN(keypad)
 {
