@@ -35,6 +35,14 @@ type (
 )
 //~~
 
+fn umc__errno(): int
+fn umc__strerror(errno: int): str
+
+fn errFromCode(): std::Err {
+	errno := umc__errno()
+	return std::error(errno, umc__strerror(errno), "catcurses.um")
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 fn umc__set_term(term: RawTerminal): RawTerminal
@@ -104,28 +112,28 @@ fn stdTerminal*(): ^Terminal {
 //
 // If no terminal existed previously, initializes ncurses and returns a stub representing the standard terminal.
 // `termType`, `outf` and `inf` are ignored in this case.
-fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool)
+fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, std::Err)
 //~~
 
 fn umc__newterm(termType: str, outf, inf: std::File): RawTerminal
 fn umc__curscr(): RawWindow
 
-fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, bool) {
-	if stdTerm == null { return stdTerminal(), true }
+fn mkTerminal*(termType: str = "", outf: std::File = null, inf: std::File = null): (^Terminal, std::Err) {
+	if stdTerm == null { return stdTerminal(), {} }
 
 	if termType == "" { termType = std::getenv("TERM") }
 	if outf == null   { outf     = std::stdout()       }
 	if inf == null    { inf      = std::stdin()        }
 
 	raw := umc__newterm(termType, std::stdout(), std::stdin())
-	if raw == null { return null, false }
+	if raw == null { return null, errFromCode() }
 
 	term := &Terminal{ _: raw }
 	old := umc__set_term(raw)
 	w := umc__curscr()
 	umc__set_term(old)
 	term.window = { _: w, terminal: term }
-	return term, true
+	return term, {}
 }
 
 //~~type ColorPairID
@@ -139,9 +147,9 @@ type ColorPairID* = int
 fn (c: ^ColorPairID) string*(): str { return sprintf("<color pair %d>", c^) }
 //~~
 
-fn umc__to_raw_color_pair(a: ColorPairID): RawColorPair
+fn umc__toRawColorPair(a: ColorPairID): RawColorPair
 
-fn (a: ^ColorPairID) raw(): uint { return umc__to_raw_color_pair(a^) }
+fn (a: ^ColorPairID) raw(): uint { return umc__toRawColorPair(a^) }
 
 //~~type StandardColor
 // Indices to the standard terminal colors.
@@ -199,11 +207,11 @@ fn (t: ^Terminal) enableColors*(): bool
 //~~
 
 fn umc__start_color_sp(term: RawTerminal): bool
-fn umc__get_current_max_colors(): int
+fn umc__getCurrentMaxColors(): int
 
 fn (t: ^Terminal) enableColors*(): bool {
 	if umc__start_color_sp(t._) {
-		t.maxColors = umc__get_current_max_colors()
+		t.maxColors = umc__getCurrentMaxColors()
 		return true
 	}
 	return false
@@ -214,13 +222,13 @@ fn (t: ^Terminal) enableColors*(): bool {
 fn (t: ^Terminal) setColorPair*(pair: ColorPairID, bg, fg: StandardColor): bool
 //~~
 
-fn umc__to_raw_standard_color(c: StandardColor): RawStandardColor
+fn umc__toRawStandardColor(c: StandardColor): RawStandardColor
 fn umc__init_pair_sp(term: RawTerminal, pair: ColorPairID, bg, fg: RawStandardColor): bool
 
 fn (t: ^Terminal) setColorPair*(pair: ColorPairID, bg, fg: StandardColor): bool {
 	return umc__init_pair_sp(t._, pair,
-		umc__to_raw_standard_color(bg),
-		umc__to_raw_standard_color(fg)
+		umc__toRawStandardColor(bg),
+		umc__toRawStandardColor(fg)
 	)
 }
 
@@ -453,6 +461,11 @@ type Key* = enum {
 
 	// Arrow keys
 	down; up; left; right
+
+	// No key was pressed; applicable when
+	// `halfDelay` or `noDelay` have been set
+	// (technical detail: returned when errno = EAGAIN)
+	none
 }
 //~~
 
@@ -495,9 +508,14 @@ const otherKeyStart = int(Key.down)
 fn keyF*(i: int): Key { return Key(int(Key.f0)+i) }
 //~~
 
+//~~const ctrlMask
+// The bitmask pertaining to CTRL+char presses.
+const ctrlMask* = uint8(0x1f)
+//~~
+
 //~~fn ctrlKey
-// Returns the CTRL representation of `k`.
-fn ctrlKey*(k: Key): Key { return Key(int(k) & 0x1f) }
+// Returns the CTRL representation of `c`.
+fn ctrlKey*(c: char): Key { return Key(uint8(c) & ctrlMask) }
 //~~
 
 //~~fn (^Window) keypad
@@ -534,26 +552,30 @@ fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int { return umc__mvwpr
 //~~fn (^Window) getKey
 // Returns the current keystroke, if any.
 // Return values depend on the standard terminal's settings; check `man 3x getch` for information.
-fn (w: ^Window) getKey*(): (Key, bool)
+fn (w: ^Window) getKey*(): (Key, std::Err)
 //~~
 
 fn umc__wgetch(win: RawWindow, c: ^int): bool
-fn umc__fn_key_offset(key: int): int
-fn umc__other_key_offset(key: int): int
+fn umc__errnoIsAgain(): bool
+fn umc__fnKeyOffset(key: int): int
+fn umc__otherKeyOffset(key: int): int
 
-fn (w: ^Window) getKey*(): (Key, bool) {
+fn (w: ^Window) getKey*(): (Key, std::Err) {
 	var c: int
-	if !umc__wgetch(w._, &c) { return Key(0), false }
+	if !umc__wgetch(w._, &c) {
+		if umc__errnoIsAgain() { return .none, {} }
+		return .none, errFromCode() 
+	}
 
 	if c >= 256 {
-		if offset := umc__fn_key_offset(c); offset >= 0 && offset <= 64 {
-			return keyF(offset), true
-		} else if offset := umc__other_key_offset(c); offset != -1 {
-			return Key(otherKeyStart+offset), true
+		if offset := umc__fnKeyOffset(c); offset >= 0 && offset <= 64 {
+			return keyF(offset), {}
+		} else if offset := umc__otherKeyOffset(c); offset != -1 {
+			return Key(otherKeyStart+offset), {}
 		}
 	}
 
-	return Key(c), true
+	return Key(c), {}
 }
 
 //~~fn (^Window) refresh
@@ -607,9 +629,9 @@ fn (a: ^Attribute) string*(): str {
 	return ""
 }
 
-fn umc__to_raw_attr(a: Attribute): RawAttribute
+fn umc__toRawAttr(a: Attribute): RawAttribute
 
-fn (a: ^Attribute) raw(): uint { return umc__to_raw_attr(a^) }
+fn (a: ^Attribute) raw(): uint { return umc__toRawAttr(a^) }
 
 // fn umc__from_raw_attr(a: RawAttribute): Attribute
 fn umc__wattr_on(win: RawWindow, a: RawAttribute): bool
