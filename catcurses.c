@@ -43,26 +43,25 @@ API_FN(endwin)
     RET_CHECK_ERR(endwin());
 }
 
-// fn umc__wprintw(win: RawWindow, s: str): int
-API_FN(wprintw)
+// fn umc__waddstr(win: RawWindow, s: str): bool
+API_FN(waddstr)
 {
     API_HEADER;
-    WINDOW *w     = GET_WINDOW(0);
-    const char *s = api->umkaGetParam(params, 1)->ptrVal;
-
-    api->umkaGetResult(params, result)->intVal = wprintw(w, "%s", s);
+    WINDOW *win = GET_WINDOW(0);
+    char *s     = api->umkaGetParam(params, 1)->ptrVal;
+    RET_CHECK_ERR(waddstr(win, s));
 }
 
-// fn umc__mvwprintw(win: RawWindow, s: str): int
-API_FN(mvwprintw)
+// fn umc__mvwaddstr(win: RawWindow, x, y: int, s: str): bool
+API_FN(mvwaddstr)
 {
     API_HEADER;
-    WINDOW *w     = GET_WINDOW(0);
-    int x         = api->umkaGetParam(params, 1)->intVal;
-    int y         = api->umkaGetParam(params, 2)->intVal;
-    const char *s = api->umkaGetParam(params, 3)->ptrVal;
 
-    api->umkaGetResult(params, result)->intVal = mvwprintw(w, y, x, "%s", s);
+    WINDOW *win = GET_WINDOW(0);
+    int x       = api->umkaGetParam(params, 1)->intVal;
+    int y       = api->umkaGetParam(params, 2)->intVal;
+    char *s     = api->umkaGetParam(params, 3)->ptrVal;
+    RET_CHECK_ERR(mvwaddstr(win, y, x, s));
 }
 
 // fn umc__wrefresh(win: RawWindow): bool
@@ -146,11 +145,11 @@ API_FN(keypad)
     RET_CHECK_ERR(keypad(w, enable));
 }
 
-// fn umc__halfdelay(win: RawWindow, enable: bool): bool
-API_FN(halfdelay)
+// fn umc__wtimeout(win: RawWindow, delay: int)
+API_FN(wtimeout)
 {
     API_HEADER;
-    RET_CHECK_ERR(halfdelay(api->umkaGetParam(params, 0)->intVal));
+    wtimeout(GET_WINDOW(0), api->umkaGetParam(params, 0)->intVal);
 }
 
 // fn umc__set_term(term: RawTerminal): RawTerminal

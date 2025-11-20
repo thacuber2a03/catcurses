@@ -320,22 +320,6 @@ fn assertStdTerm(t: ^Terminal, func: str) {
 	std::assert(t == stdTerm, sprintf("can't call '%s' on anything other than the standard terminal", func))
 }
 
-//~~fn (^Terminal) raw
-// Enables/disables raw mode for the terminal.
-// Must only be called on the standard terminal (see `fn stdTerminal`).
-// Reports whether the terminal was set/unset to raw mode.
-fn (t: ^Terminal) raw*(b: bool): bool
-//~~
-
-fn umc__raw(): bool
-fn umc__noraw(): bool
-
-fn (t: ^Terminal) raw*(b: bool): bool {
-	assertStdTerm(t, "raw")
-	if b { return umc__raw() }
-	return umc__noraw()
-}
-
 //~~fn (^Terminal) cbreak
 // Enables/disables cbreak mode (disables line buffering but still interprets signals) for the terminal.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
@@ -385,18 +369,20 @@ fn (t: ^Terminal) nl*(b: bool): bool {
 	return umc__nonl()
 }
 
-//~~fn (^Terminal) halfDelay
-// Sets the terminal's half-delay, in tenths of a second.
+//~~fn (^Terminal) raw
+// Enables/disables raw mode for the terminal.
 // Must only be called on the standard terminal (see `fn stdTerminal`).
-// Reports whether the half delay was able to be changed.
-fn (t: ^Terminal) halfDelay*(n: int): bool
+// Reports whether the terminal was set/unset to raw mode.
+fn (t: ^Terminal) raw*(b: bool): bool
 //~~
 
-fn umc__halfdelay(tenths: int): bool
+fn umc__raw(): bool
+fn umc__noraw(): bool
 
-fn (t: ^Terminal) halfDelay*(n: int): bool {
-	assertStdTerm(t, "halfDelay")
-	return umc__halfdelay(n)
+fn (t: ^Terminal) raw*(b: bool): bool {
+	assertStdTerm(t, "raw")
+	if b { return umc__raw() }
+	return umc__noraw()
 }
 
 //~~type Visibility
@@ -463,7 +449,7 @@ type Key* = enum {
 	down; up; left; right
 
 	// No key was pressed; applicable when
-	// `halfDelay` or `noDelay` have been set
+	// `timeout` or `noDelay` have been set
 	// (technical detail: returned when errno = EAGAIN)
 	none
 }
@@ -527,28 +513,6 @@ fn (w: ^Window) keypad*(enable: bool): bool
 fn umc__keypad(win: RawWindow, enable: bool): bool
 fn (w: ^Window) keypad*(enable: bool): bool { return umc__keypad(w._, enable) }
 
-//~~fn (^Window) print
-// Prints a formatted string on the current location of the cursor.
-// Returns how many characters were written.
-// 
-// The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
-fn (w: ^Window) print*(fmt: str, a: ..any): int
-//~~
-
-fn umc__wprintw(win: RawWindow, s: str): int
-fn (w: ^Window) print*(fmt: str, a: ..any): int { return umc__wprintw(w._, fmt::vsfmt(fmt,  a)) }
-
-//~~fn (^Window) printAt
-// Moves the cursor to (`x`,`y`) and prints a formatted string there.
-// Returns how many characters were written.
-//
-// The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
-fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
-//~~
-
-fn umc__mvwprintw(win: RawWindow, x, y: int, s: str): int
-fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int { return umc__mvwprintw(w._, x, y, fmt::vsfmt(fmt,  a)) }
-
 //~~fn (^Window) noDelay
 // Disables delay entirely (makes `fn (^Window) getKey` and related non-blocking).
 // Reports whether the operation succeeded.
@@ -558,6 +522,76 @@ fn (w: ^Window) noDelay*(b: bool): bool
 fn umc__nodelay(win: RawWindow, bf: bool): bool
 
 fn (w: ^Window) noDelay*(b: bool): bool { return umc__nodelay(w._, b) }
+
+//~~
+// Constants for `fn (^Window) timeout`.
+const (
+	blocking* = -1
+	nonBlocking*
+)
+//~~
+
+//~~fn (^Window) timeout
+// Sets the timeout for reading operations (`fn (^Window) getKey` and others).
+// Fine-grained; does millisecond-level control, as opposed to `man 3x halfdelay`.
+//
+// If `n`:
+// - = `-1`/`blocking`, calls to `getKey` and friends will wait forever.
+// - = `0`/`nonBlocking`, calls to `getKey` and friends will return immediately.
+// - Otherwise, waits up to `n` milliseconds.
+fn (w: ^Window) timeout*(n: int)
+//~~
+
+fn umc__wtimeout(win: RawWindow, delay: int)
+
+fn (w: ^Window) timeout*(n: int) { umc__wtimeout(w._, n) }
+
+fn umc__waddstr(win: RawWindow, s: str): bool
+fn umc__mvwaddstr(win: RawWindow, x, y: int, s: str): bool
+
+//~~fn (^Window) print
+// Prints a formatted string in the current position of the cursor.
+// Returns how many characters were written.
+// 
+// The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
+fn (w: ^Window) print*(fmt: str, a: ..any): int
+//~~
+
+fn (w: ^Window) print*(fmt: str, a: ..any): int {
+	s := fmt::vsfmt(fmt, a)
+	if !umc__waddstr(w._, s) { return 0 }
+	return len(s)
+}
+
+//~~fn (^Window) printAt
+// Moves the cursor to (`x`,`y`) and prints a formatted string there.
+// Returns how many characters were written.
+//
+// The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.
+fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int
+//~~
+
+fn (w: ^Window) printAt*(x, y: int, fmt: str, a: ..any): int {
+	s := fmt::vsfmt(fmt, a)
+	if !umc__mvwaddstr(w._, x, y, s) { return 0 }
+	return len(s)
+}
+
+//~~fn (^Window) writeString
+// Writes a raw string in the current position of the cursor.
+// Reports whether it could be written.
+fn (w: ^Window) writeString*(s: str): bool
+//~~
+
+fn (w: ^Window) writeString*(s: str): bool { return umc__waddstr(w._, s) }
+
+//~~fn (^Window) writeStringAt
+// Moves the cursor to (`x`,`y`) and writes a raw string there.
+// Reports whether it could be written.
+fn (w: ^Window) writeStringAt*(x, y: int, s: str): bool
+//~~
+
+fn (w: ^Window) writeStringAt*(x, y: int, s: str): bool { return umc__mvwaddstr(w._, x, y, s) }
 
 //~~fn (^Window) getKey
 // Returns the current keystroke, if any.

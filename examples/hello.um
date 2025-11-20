@@ -13,7 +13,7 @@ fn main() {
 	term := cc::stdTerminal()
 	term.raw(true)
 	term.echo(false)
-	term.halfDelay(1)
+	term.timeout(100)
 	term.cursorVisibility(.hidden)
 
 	term.enableColors()
