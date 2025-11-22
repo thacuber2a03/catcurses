@@ -429,28 +429,22 @@ fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool) {
 // If getKey returns an ASCII keypress, the value wrapped under this enum will be that key.
 //
 // > [!WARNING]
-// > The function keys (F0..F64 and arrow keys, amongst others)
+// > The function keys (F0..F12 and arrow keys, amongst others)
 // > *do not match* the values used by ncurses, and don't currently intend to do so.
 type Key* = enum {
+	newline = 10
+	enter = 13 // '\r' in raw mode
+
 	escape = 0x1b
 
-	// Function keys (every single one is supported for completion's sake)
-	f0 = 1000;
-	f1;  f2;  f3;  f4;  f5;  f6;  f7;  f8
-	f9;  f10; f11; f12; f13; f14; f15; f16
-	f17; f18; f19; f20; f21; f22; f23; f24
-	f25; f26; f27; f28; f29; f30; f31; f32
-	f33; f34; f35; f36; f37; f38; f39; f40
-	f41; f42; f43; f44; f45; f46; f47; f48
-	f49; f50; f51; f52; f53; f54; f55; f56
-	f57; f58; f59; f60; f61; f62; f63; f64
+	// Function keys
+	f0 = 1000; f1; f2; f3; f4; f5; f6; f7; f8; f9; f10; f11; f12
 
-	// Arrow keys
-	down; up; left; right
-
+	down; up; left; right // Arrow keys
 	pageUp; pageDown
 	home; end
-	delete
+	insert; delete
+	backspace
 
 	// No key was pressed; applicable when
 	// `timeout` or `noDelay` have been set
@@ -473,20 +467,15 @@ fn (k: ^Key) string*(): str {
 		keyStringReprs = {
 			.escape: "escape",
 
-			.f0: "f0",
-			.f1: "f1",   .f2: "f2",   .f3: "f3",   .f4: "f4",   .f5: "f5",   .f6: "f6",   .f7: "f7",   .f8: "f8",
-			.f9: "f9",   .f10: "f10", .f11: "f11", .f12: "f12", .f13: "f13", .f14: "f14", .f15: "f15", .f16: "f16",
-			.f17: "f17", .f18: "f18", .f19: "f19", .f20: "f20", .f21: "f21", .f22: "f22", .f23: "f23", .f24: "f24",
-			.f25: "f25", .f26: "f26", .f27: "f27", .f28: "f28", .f29: "f29", .f30: "f30", .f31: "f31", .f32: "f32",
-			.f33: "f33", .f34: "f34", .f35: "f35", .f36: "f36", .f37: "f37", .f38: "f38", .f39: "f39", .f40: "f40",
-			.f41: "f41", .f42: "f42", .f43: "f43", .f44: "f44", .f45: "f45", .f46: "f46", .f47: "f47", .f48: "f48",
-			.f49: "f49", .f50: "f50", .f51: "f51", .f52: "f52", .f53: "f53", .f54: "f54", .f55: "f55", .f56: "f56",
-			.f57: "f57", .f58: "f58", .f59: "f59", .f60: "f60", .f61: "f61", .f62: "f62", .f63: "f63", .f64: "f64",
+			.f0: "f0", .f1: "f1", .f2: "f2", .f3: "f3", .f4: "f4", .f5: "f5", .f6: "f6",
+			.f7: "f7", .f8: "f8", .f9: "f9",   .f10: "f10", .f11: "f11", .f12: "f12",
 
 			.down: "down", .up: "up", .left: "left", .right: "right",
 
 			.pageUp: "pageUp", .pageDown: "pageDown",
 			.home: "home", .end: "end",
+			.delete: "delete", .backspace: "backspace",
+
 			.none: "none",
 		}
 	}
@@ -508,8 +497,8 @@ const ctrlMask* = uint8(0x1f)
 //~~
 
 //~~fn ctrlKey
-// Returns the CTRL representation of `c`.
-fn ctrlKey*(c: char): Key { return Key(uint8(c) & ctrlMask) }
+// Returns the CTRL representation of `k`.
+fn ctrlKey*(k: Key): Key { return Key(int(k) & ctrlMask) }
 //~~
 
 //~~fn (^Window) keypad
@@ -628,7 +617,7 @@ fn (w: ^Window) getKey*(): (Key, std::Err) {
 	}
 
 	if c >= 256 {
-		if offset := umc__fnKeyOffset(c); offset >= 0 && offset <= 64 {
+		if offset := umc__fnKeyOffset(c); offset >= 0 && offset <= 12 {
 			return keyF(offset), {}
 		} else if offset := umc__otherKeyOffset(c); offset != -1 {
 			return Key(otherKeyStart+offset), {}

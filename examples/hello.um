@@ -13,7 +13,6 @@ fn main() {
 	term := cc::stdTerminal()
 	term.raw(true)
 	term.echo(false)
-	term.timeout(100)
 	term.cursorVisibility(.hidden)
 
 	term.enableColors()
@@ -22,6 +21,7 @@ fn main() {
 
 	win := term.window
 	win.keypad(true)
+	win.timeout(100)
 
 	for true {
 		c, ok := win.getKey()

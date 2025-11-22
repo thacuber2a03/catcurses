@@ -130,7 +130,7 @@ API_FN(keypad)
 {
     API_HEADER;
     WINDOW *w   = GET_WINDOW(0);
-    bool enable = api->umkaGetParam(params, 1)->uintVal;
+    bool enable = api->umkaGetParam(params, 1)->intVal;
     RET_CHECK_ERR(keypad(w, enable));
 }
 
@@ -138,7 +138,7 @@ API_FN(keypad)
 API_FN(wtimeout)
 {
     API_HEADER;
-    wtimeout(GET_WINDOW(0), api->umkaGetParam(params, 0)->intVal);
+    wtimeout(GET_WINDOW(0), api->umkaGetParam(params, 1)->intVal);
 }
 
 // fn umc__set_term(term: RawTerminal): RawTerminal
@@ -180,7 +180,7 @@ API_FN(fnKeyOffset)
 // must match the order of all keys listed
 // after the one otherKeyStart refers to in catcurses.um
 static int keys[] = {
-    KEY_DOWN, KEY_UP, KEY_LEFT, KEY_RIGHT, KEY_PPAGE, KEY_NPAGE, KEY_HOME, KEY_END, KEY_DC,
+    KEY_DOWN, KEY_UP, KEY_LEFT, KEY_RIGHT, KEY_PPAGE, KEY_NPAGE, KEY_HOME, KEY_END, KEY_IC, KEY_DC, KEY_BACKSPACE,
 };
 
 static int keysLen = ARRLEN(keys);
@@ -221,21 +221,6 @@ API_FN(toRawColorPair)
 
     api->umkaGetResult(params, result)->intVal = COLOR_PAIR(colorPair);
 }
-
-// fn umc__from_raw_attr(a: RawAttribute): Attribute
-/*
-API_HEADER;    attr_t rawAttr = api->umkaGetParam(params, 0)->uintVal;
-
-    for (size_t i = 0; i < ARRLEN(attributes); i++)
-        if (rawAttr == attributes[i])
-        {
-            api->umkaGetResult(params, result)->intVal = i;
-            return;
-        }
-
-    api->umkaGetResult(params, result)->intVal = -1;
-}
-*/
 
 // fn umc__wattr_on(win: RawWindow, a: RawAttribute): bool
 API_FN(wattr_on)
@@ -304,8 +289,8 @@ API_FN(wmove)
 API_FN(curs_set)
 {
     API_HEADER;
-    int *prev = api->umkaGetParam(params, 1)->ptrVal;
     int v     = api->umkaGetParam(params, 0)->intVal;
+    int *prev = api->umkaGetParam(params, 1)->ptrVal;
     RET_CHECK_ERR(*prev = curs_set(v));
 }
 
