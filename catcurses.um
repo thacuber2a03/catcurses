@@ -422,6 +422,15 @@ fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool) {
 	return prev, true
 }
 
+//~~fn (^Terminal) escapeDelay
+// Changes the amount of time ncurses waits for further input to disambiguate escapes from escape sequences.
+fn (t: ^Terminal) escapeDelay*(n: int)
+//~~
+
+fn umc__setEscDelay(n: int)
+
+fn (t: ^Terminal) escapeDelay*(n: int) { umc__setEscDelay(n) }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //~~type Key
@@ -530,7 +539,7 @@ const (
 
 //~~fn (^Window) timeout
 // Sets the timeout for reading operations (`fn (^Window) getKey` and others).
-// Fine-grained; does millisecond-level control, as opposed to `man 3x halfdelay`.
+// Fine-grained; has millisecond-level control, as opposed to `man 3x halfdelay`.
 //
 // If `n`:
 // - = `-1`/`blocking`, calls to `getKey` and friends will wait forever.

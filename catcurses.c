@@ -431,3 +431,10 @@ API_FN(wclrtoeol)
     WINDOW *win = GET_WINDOW(0);
     RET_CHECK_ERR(wclrtoeol(win));
 }
+
+// fn umc__setEscDelay(n: int)
+API_FN(setEscDelay)
+{
+    API_HEADER;
+    ESCDELAY = api->umkaGetParam(params, 0)->intVal;
+}
