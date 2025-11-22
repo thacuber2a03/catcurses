@@ -728,7 +728,7 @@ Shorthand for `w.getCursorPos().item0`.
 fn (w: ^Window) getCursorY*(): int { return w.getCursorPos().item1 }
 ```
 
-Shorthand for `w.getCursorPos().item0`.
+Shorthand for `w.getCursorPos().item1`.
 
 
 ## [fn (^Window) moveCursor](../catcurses.um#L905)
