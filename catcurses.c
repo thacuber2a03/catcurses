@@ -301,7 +301,7 @@ API_FN(wattr_get)
     WINDOW *w = GET_WINDOW(0);
     attr_t *a = api->umkaGetParam(params, 1)->ptrVal;
     short *p  = api->umkaGetParam(params, 2)->ptrVal;
-    RET_CHECK_ERR(wattr_get(w, a, p, NULL)); // that one Cardi B song
+    RET_CHECK_ERR(wattr_get(w, a, p, NULL));
 }
 
 // fn umc__wattr_set(win: RawWindow, attr: RawAttribute, pair: ColorPairID): bool
@@ -311,7 +311,7 @@ API_FN(wattr_set)
     WINDOW *w = GET_WINDOW(0);
     attr_t a  = api->umkaGetParam(params, 1)->uintVal;
     short p   = api->umkaGetParam(params, 2)->intVal;
-    RET_CHECK_ERR(wattr_set(w, a, p, NULL)); // again
+    RET_CHECK_ERR(wattr_set(w, a, p, NULL));
 }
 
 // fn umc__has_colors_sp(term: RawTerminal): bool
