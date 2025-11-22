@@ -424,6 +424,7 @@ fn (t: ^Terminal) cursorVisibility*(v: Visibility): (Visibility, bool) {
 
 //~~fn (^Terminal) escapeDelay
 // Changes the amount of time ncurses waits for further input to disambiguate escapes from escape sequences.
+// Only applicable when `keypad(true)`; otherwise, the program must disambiguate escapes itself.
 fn (t: ^Terminal) escapeDelay*(n: int)
 //~~
 
