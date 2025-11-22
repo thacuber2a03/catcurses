@@ -719,16 +719,16 @@ Returns the position of the cursor relative to this window, in (`x`, `y`) order.
 fn (w: ^Window) getCursorX*(): int { return w.getCursorPos().item0 }
 ```
 
-Shorthand for `w.getCursorX().item0`.
+Shorthand for `w.getCursorPos().item0`.
 
 
 ## [fn (^Window) getCursorY](../catcurses.um#L900)
 
 ```go
-fn (w: ^Window) getCursorX*(): int { return w.getCursorPos().item0 }
+fn (w: ^Window) getCursorY*(): int { return w.getCursorPos().item1 }
 ```
 
-Shorthand for `w.getCursorX().item0`.
+Shorthand for `w.getCursorPos().item0`.
 
 
 ## [fn (^Window) moveCursor](../catcurses.um#L905)

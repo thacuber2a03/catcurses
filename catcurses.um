@@ -891,13 +891,13 @@ fn (w: ^Window) getCursorPos*(): (int, int) {
 }
 
 //~~fn (^Window) getCursorX
-// Shorthand for `w.getCursorX().item0`.
+// Shorthand for `w.getCursorPos().item0`.
 fn (w: ^Window) getCursorX*(): int { return w.getCursorPos().item0 }
 //~~
 
 //~~fn (^Window) getCursorY
-// Shorthand for `w.getCursorX().item0`.
-fn (w: ^Window) getCursorX*(): int { return w.getCursorPos().item0 }
+// Shorthand for `w.getCursorPos().item0`.
+fn (w: ^Window) getCursorY*(): int { return w.getCursorPos().item1 }
 //~~
 
 //~~fn (^Window) moveCursor
