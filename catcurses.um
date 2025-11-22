@@ -442,6 +442,7 @@ fn (t: ^Terminal) escapeDelay*(n: int) { umc__setEscDelay(n) }
 // > The function keys (F0..F12 and arrow keys, amongst others)
 // > *do not match* the values used by ncurses, and don't currently intend to do so.
 type Key* = enum {
+	tab = 9
 	newline = 10
 	enter = 13 // '\r' in raw mode
 
