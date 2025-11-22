@@ -564,10 +564,20 @@ fn umc__wmove(win: RawWindow, x, y: int): bool
 
 fn (w: ^Window) setCursorPos*(x, y: int): bool { return umc__wmove(w._, x, y) }
 
+//~~fn (^Window) writeChar
+// Writes `c` at the current position of the cursor.
+// Reports whether it was able to do so.
+fn (w: ^Window) writeChar*(c: char): bool
+//~~
+
+fn umc__waddch(w: RawWindow, c: char): bool
+
+fn (w: ^Window) writeChar*(c: char): bool { return umc__waddch(w._, c) }
+
 fn umc__waddnstr(win: RawWindow, s: str, n: int): bool
 
 //~~fn (^Window) writeString
-// Writes `n` bytes of `s` in the current position of the cursor.
+// Writes `n` bytes of `s` at the current position of the cursor.
 // If `n` == `-1`, writes the whole string. (default behavior)
 // Reports whether it could be written.
 // Fails if `n` != `-1` and `n` > `len(s)`.
@@ -590,7 +600,7 @@ fn (w: ^Window) writeStringAt*(x, y: int, s: str, n: int = -1): bool {
 }
 
 //~~fn (^Window) print
-// Prints a formatted string in the current position of the cursor.
+// Prints a formatted string at the current position of the cursor.
 // Reports whether it could be written.
 // 
 // The format string follows [fmt.um](https://umbox.tophat2d.dev/package/fmt/browse#:~:text=Syntax)'s syntax.

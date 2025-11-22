@@ -53,6 +53,15 @@ API_FN(waddnstr)
     RET_CHECK_ERR(waddnstr(win, s, n));
 }
 
+// fn umc__waddch(win: RawWindow, c: char): bool
+API_FN(waddch)
+{
+    API_HEADER;
+    WINDOW *win = GET_WINDOW(0);
+    char c      = api->umkaGetParam(params, 1)->intVal;
+    RET_CHECK_ERR(waddch(win, c));
+}
+
 // fn umc__wrefresh(win: RawWindow): bool
 API_FN(wrefresh)
 {
