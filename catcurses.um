@@ -890,6 +890,16 @@ fn (w: ^Window) getCursorPos*(): (int, int) {
 	return x, y
 }
 
+//~~fn (^Window) getCursorX
+// Shorthand for `w.getCursorX().item0`.
+fn (w: ^Window) getCursorX*(): int { return w.getCursorPos().item0 }
+//~~
+
+//~~fn (^Window) getCursorY
+// Shorthand for `w.getCursorX().item0`.
+fn (w: ^Window) getCursorX*(): int { return w.getCursorPos().item0 }
+//~~
+
 //~~fn (^Window) moveCursor
 // Moves the cursor by (`dx`,`dy`). Reports whether it was able to do so.
 fn (w: ^Window) moveCursor*(dx, dy: int): bool
