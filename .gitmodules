@@ -1,0 +1,3 @@
+[submodule "examples/kilo"]
+	path = examples/kilo
+	url = https://github.com/thacuber2a03/kilocat
