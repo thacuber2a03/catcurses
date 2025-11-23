@@ -866,6 +866,9 @@ fn init() {
 				"goto", "if", "return", "sizeof", "switch", "while", "offsetof", "alignas",
 				"alignof",
 
+				// cause yeah sure why not
+				"#include|", "#define|", "#ifdef|", "#ifndef|", "#endif|",
+
 				// I copied this whole list of types from Kakoune's `rc/filetype/c-family.kak`
 				"char|", "double|", "float|", "int|", "long|", "short|", "signed|", "unsigned|", "void|", "complex|", "imaginary|", "fenv_t|",
 				"fexcept_t|", "imaxdiv_t|", "lconv|", "float_t|", "double_t|", "jmp_buf|", "sig_atomic_t|", "va_list|", "memory_order|", "atomic_flag|",
