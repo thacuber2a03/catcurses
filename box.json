@@ -11,9 +11,9 @@
     ],
     "include": [
         "LICENSE",
-        "README.md",
         "catcurses.um",
-        "catcurses_linux.umi"
+        "catcurses_linux.umi",
+        "doc/catcurses.md"
     ],
     "pre_build": {
         "posix": "make",
