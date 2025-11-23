@@ -845,11 +845,14 @@ fn init() {
 				"if", "in", "map", "return", "struct", "switch",
 				"type", "var", "weak",
 
+				"void|",
 				"int8|", "int16|", "int32|", "int|",
 				"uint8|", "uint16|", "uint32|", "uint|",
-				"real|", "real32|",
-				"bool|", "char|", "str|",
-				"void|", "fiber|",
+				"bool|",
+				"char|",  "str|",
+				"real32|", "real|",
+				"fiber|", "any|",
+				"__file|",
 			},
 			singleLineCommentStart: "//",
 			multilineComment: { "/*", "*/" },
@@ -863,6 +866,7 @@ fn init() {
 				"goto", "if", "return", "sizeof", "switch", "while", "offsetof", "alignas",
 				"alignof",
 
+				// I copied this whole list of types from Kakoune's `rc/filetype/c-family.kak`
 				"char|", "double|", "float|", "int|", "long|", "short|", "signed|", "unsigned|", "void|", "complex|", "imaginary|", "fenv_t|",
 				"fexcept_t|", "imaxdiv_t|", "lconv|", "float_t|", "double_t|", "jmp_buf|", "sig_atomic_t|", "va_list|", "memory_order|", "atomic_flag|",
 				"atomic_bool|", "atomic_char|", "atomic_schar|", "atomic_uchar|", "atomic_wchar|", "atomic_short|", "atomic_ushort|", "atomic_int|",
