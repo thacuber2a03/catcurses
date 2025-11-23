@@ -13,7 +13,7 @@
         "LICENSE",
         "README.md",
         "catcurses.um",
-        "catcurses_linux.so"
+        "catcurses_linux.umi"
     ],
     "pre_build": {
         "posix": "make",
